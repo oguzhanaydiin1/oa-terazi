@@ -6,24 +6,24 @@ import 'package:google_fonts/google_fonts.dart';
 class OA {
   OA._();
   static bool koyu = true;
-  static Color _(int d, int l) => Color(koyu ? d : l);
-  static Color get bg => _(0xFF0D0F16, 0xFFF6F3EC);
-  static Color get bg2 => _(0xFF11131C, 0xFFEFEBE2);
-  static Color get surface => _(0xFF151824, 0xFFFFFFFF);
-  static Color get surface2 => _(0xFF1C2030, 0xFFF0ECE3);
-  static Color get line => _(0xFF1E2232, 0xFFE7E1D5);
-  static Color get border => _(0xFF262B3D, 0xFFE3DDD0);
-  static Color get border2 => _(0xFF2A2F43, 0xFFD6CFBF);
-  static Color get text => _(0xFFEEEAE2, 0xFF1A1710);
-  static Color get text2 => _(0xFFB7BACA, 0xFF4A4336);
-  static Color get muted => _(0xFF9EA2B3, 0xFF6B6457);
-  static Color get faint => _(0xFF7E8296, 0xFF8F8878);
-  static Color get amber => _(0xFFF2A541, 0xFFE0901F);
-  static Color get amberHi => _(0xFFF7BF6E, 0xFFC97A12);
+  static Color _r(int d, int l) => Color(koyu ? d : l);
+  static Color get bg => _r(0xFF0D0F16, 0xFFF6F3EC);
+  static Color get bg2 => _r(0xFF11131C, 0xFFEFEBE2);
+  static Color get surface => _r(0xFF151824, 0xFFFFFFFF);
+  static Color get surface2 => _r(0xFF1C2030, 0xFFF0ECE3);
+  static Color get line => _r(0xFF1E2232, 0xFFE7E1D5);
+  static Color get border => _r(0xFF262B3D, 0xFFE3DDD0);
+  static Color get border2 => _r(0xFF2A2F43, 0xFFD6CFBF);
+  static Color get text => _r(0xFFEEEAE2, 0xFF1A1710);
+  static Color get text2 => _r(0xFFB7BACA, 0xFF4A4336);
+  static Color get muted => _r(0xFF9EA2B3, 0xFF6B6457);
+  static Color get faint => _r(0xFF7E8296, 0xFF8F8878);
+  static Color get amber => _r(0xFFF2A541, 0xFFE0901F);
+  static Color get amberHi => _r(0xFFF7BF6E, 0xFFC97A12);
   static const amberInk = Color(0xFF14110A);
-  static Color get green => _(0xFF5BC48C, 0xFF2E9D63);
-  static Color get blue => _(0xFF6EA8FE, 0xFF3B7DDB);
-  static Color get danger => _(0xFFF08A7E, 0xFFD2553F);
+  static Color get green => _r(0xFF5BC48C, 0xFF2E9D63);
+  static Color get blue => _r(0xFF6EA8FE, 0xFF3B7DDB);
+  static Color get danger => _r(0xFFF08A7E, 0xFFD2553F);
 }
 
 /// Başlık yazısı: Bricolage Grotesque 800.
@@ -128,7 +128,7 @@ class OAButton extends StatelessWidget {
         minimumSize: Size(0, h),
         padding: pad,
         shape: const StadiumBorder(),
-        side: const BorderSide(color: OA.border2),
+        side: BorderSide(color: OA.border2),
         textStyle: style,
       ),
       child: Text(label),
