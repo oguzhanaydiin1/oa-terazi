@@ -1,3 +1,8 @@
+## 0.1.2
+- İngilizce: uygulama cihazın diline göre açılır; Ayarlar’dan Türkçe ya da English seçilebilir.
+- Açık tema: Ayarlar’dan Koyu, Açık ya da Sistem gibi.
+- Para birimi: TL, dolar, euro, sterlin, ruble, manat ve İsviçre frangı.
+
 ## 0.1.1
 - Android'de yazı tipleri yüklenmiyordu, düzeltildi.
 

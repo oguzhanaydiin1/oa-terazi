@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'i18n.dart';
 import 'kategoriler.dart';
 import 'models.dart';
 
@@ -18,6 +19,9 @@ class Store extends ChangeNotifier {
   final List<Duzenli> duzenliler = [];
   final Map<String, int> butceler = {}; // kategori → aylık sınır (kuruş)
   bool bildirim = true;
+  String dil = 'sistem'; // sistem, tr, en
+  String tema = 'sistem'; // sistem, koyu, acik
+  String paraBirimi = 'TRY';
 
   /// Veri değişince (bildirimleri yeniden planlamak için) çağrılır.
   void Function()? degisince;
@@ -58,6 +62,9 @@ class Store extends ChangeNotifier {
         ..clear()
         ..addAll(((j['butceler'] as Map?) ?? {}).map((k, v) => MapEntry(k as String, (v as num).toInt())));
       bildirim = j['bildirim'] != false;
+      dil = (j['dil'] as String?) ?? 'sistem';
+      tema = (j['tema'] as String?) ?? 'sistem';
+      paraBirimi = (j['paraBirimi'] as String?) ?? 'TRY';
       _sirala();
     } catch (e) {
       // Bozuk dosyayı silmek yerine kenara al; kullanıcı verisi kaybolmasın.
@@ -74,6 +81,9 @@ class Store extends ChangeNotifier {
         'duzenliler': duzenliler.map((d) => d.toJson()).toList(),
         'butceler': butceler,
         'bildirim': bildirim,
+        'dil': dil,
+        'tema': tema,
+        'paraBirimi': paraBirimi,
       };
 
   void _degisti() {
@@ -236,6 +246,13 @@ class Store extends ChangeNotifier {
     _degisti();
   }
 
+  void gorunumAyarla({String? dil, String? tema, String? paraBirimi}) {
+    if (dil != null) this.dil = dil;
+    if (tema != null) this.tema = tema;
+    if (paraBirimi != null) this.paraBirimi = paraBirimi;
+    _degisti();
+  }
+
   void bildirimAyarla(bool v) {
     bildirim = v;
     _degisti();
@@ -250,11 +267,12 @@ class Store extends ChangeNotifier {
 
   /// Hareketleri CSV olarak (Excel'de açılır; ayırıcı ";").
   String csv() {
-    final b = StringBuffer('﻿Tarih;Tür;Kategori;Açıklama;Tutar\n');
+    final b = StringBuffer(Lx('\uFEFFTarih;Tür;Kategori;Açıklama;Tutar (${Bicim.birim.kod})\n',
+        '\uFEFFDate;Type;Category;Description;Amount (${Bicim.birim.kod})\n'));
     for (final k in kayitlar) {
       final aciklama = k.aciklama.replaceAll('"', '""');
-      final tutar = (k.isaretli / 100).toStringAsFixed(2).replaceAll('.', ',');
-      b.write('${gunAnahtar(k.tarih)};${k.tur == Tur.gelir ? 'Gelir' : 'Gider'};${kategori(k.kategori).ad};"$aciklama";$tutar\n');
+      final tutar = (k.isaretli / 100).toStringAsFixed(2).replaceAll('.', Bicim.ondalik);
+      b.write('${gunAnahtar(k.tarih)};${k.tur == Tur.gelir ? L('Gelir') : L('Gider')};${kategori(k.kategori).ad};"$aciklama";$tutar\n');
     }
     return b.toString();
   }

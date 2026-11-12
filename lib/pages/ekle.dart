@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../i18n.dart';
 import '../kategoriler.dart';
 import '../models.dart';
 import '../store.dart';
@@ -31,7 +32,7 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
   static String _girdiYap(int? k) {
     if (k == null || k == 0) return '';
     final l = k ~/ 100, c = k % 100;
-    return c == 0 ? '$l' : '$l,${c.toString().padLeft(2, '0')}';
+    return c == 0 ? '$l' : '$l,${c.toString().padLeft(2, '0')}'; // iç biçim: ondalık hep virgül
   }
 
   int get tutar => paraOku(girdi) ?? 0;
@@ -68,10 +69,10 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
   }
 
   String get gosterim {
-    if (girdi.isEmpty) return '₺0';
+    if (girdi.isEmpty) return sembolle('0');
     final p = girdi.split(',');
-    final tam = para((int.tryParse(p[0]) ?? 0) * 100, kurussuz: true);
-    return p.length > 1 ? '$tam,${p[1]}' : tam;
+    final tam = binlikli(int.tryParse(p[0]) ?? 0);
+    return sembolle(p.length > 1 ? '$tam${Bicim.ondalik}${p[1]}' : tam);
   }
 
   KeyEventResult klavye(FocusNode _, KeyEvent e) {
@@ -108,7 +109,7 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
 
   void kaydet() {
     if (tutar <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Önce tutarı yaz.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L('Önce tutarı yaz.'))));
       return;
     }
     final k = widget.kayit;
@@ -130,18 +131,18 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
       context: context,
       builder: (c) => AlertDialog(
         backgroundColor: OA.surface,
-        title: Text('Kayıt silinsin mi?', style: oaDisplay(20)),
+        title: Text(L('Kayıt silinsin mi?'), style: oaDisplay(20)),
         content: Text(
           k.duzenliId != null
-              ? 'Bu, bir düzenli ödemenin "ödendi" kaydı. Silersen o ayın ödemesi yeniden açık görünür.'
-              : '${para(k.tutar)} tutarındaki kayıt silinecek.',
+              ? L('Bu, bir düzenli ödemenin "ödendi" kaydı. Silersen o ayın ödemesi yeniden açık görünür.')
+              : Lx('${para(k.tutar)} tutarındaki kayıt silinecek.', 'The ${para(k.tutar)} entry will be deleted.'),
           style: oaBody(15, color: OA.text2),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(L('Vazgeç'))),
           TextButton(
             onPressed: () => Navigator.pop(c, true),
-            child: Text('Sil', style: oaBody(15, color: OA.danger, weight: FontWeight.w600)),
+            child: Text(L('Sil'), style: oaBody(15, color: OA.danger, weight: FontWeight.w600)),
           ),
         ],
       ),
@@ -165,21 +166,21 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
           children: [
             Row(
               children: [
-                Expanded(child: Text(widget.kayit == null ? 'Yeni kayıt' : 'Kaydı düzenle', style: oaDisplay(22))),
+                Expanded(child: Text(widget.kayit == null ? L('Yeni kayıt') : L('Kaydı düzenle'), style: oaDisplay(22))),
                 if (widget.kayit != null)
-                  IconButton(tooltip: 'Sil', onPressed: sil, icon: const Icon(Icons.delete_outline, color: OA.danger)),
+                  IconButton(tooltip: L('Sil'), onPressed: sil, icon: Icon(Icons.delete_outline, color: OA.danger)),
                 IconButton(
-                  tooltip: 'Kapat',
+                  tooltip: L('Kapat'),
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: OA.text2),
+                  icon: Icon(Icons.close, color: OA.text2),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             SegmentedButton<Tur>(
-              segments: const [
-                ButtonSegment(value: Tur.gider, label: Text('Gider')),
-                ButtonSegment(value: Tur.gelir, label: Text('Gelir')),
+              segments: [
+                ButtonSegment(value: Tur.gider, label: Text(L('Gider'))),
+                ButtonSegment(value: Tur.gelir, label: Text(L('Gelir'))),
               ],
               selected: {tur},
               showSelectedIcon: false,
@@ -192,7 +193,7 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
                 foregroundColor: OA.text2,
                 selectedBackgroundColor: OA.amber,
                 selectedForegroundColor: OA.amberInk,
-                side: const BorderSide(color: OA.border2),
+                side: BorderSide(color: OA.border2),
               ),
             ),
             const SizedBox(height: 18),
@@ -209,11 +210,11 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
             Row(
               children: [
                 ActionChip(
-                  avatar: const Icon(Icons.event_outlined, size: 18, color: OA.text2),
+                  avatar: Icon(Icons.event_outlined, size: 18, color: OA.text2),
                   label: Text('${gunYazi(tarih, bugun)}${ayniGun(tarih, bugun) ? ', ${tarihYazi(tarih)}' : ''}'),
                   onPressed: tarihSec,
                   backgroundColor: OA.surface,
-                  side: const BorderSide(color: OA.border2),
+                  side: BorderSide(color: OA.border2),
                   labelStyle: oaBody(14, color: OA.text2),
                 ),
                 const SizedBox(width: 10),
@@ -222,8 +223,8 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
                     controller: not,
                     style: oaBody(15),
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      hintText: 'Açıklama (ör. Migros)',
+                    decoration: InputDecoration(
+                      hintText: L('Açıklama (ör. Migros)'),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                     ),
@@ -233,7 +234,7 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
               ],
             ),
             const SizedBox(height: 18),
-            Text('Kategori', style: oaBody(14, color: OA.muted, weight: FontWeight.w600)),
+            Text(L('Kategori'), style: oaBody(14, color: OA.muted, weight: FontWeight.w600)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -245,7 +246,7 @@ class _EkleSayfasiState extends State<EkleSayfasi> {
             const SizedBox(height: 18),
             _TusTakimi(tus),
             const SizedBox(height: 16),
-            OAButton('Kaydet', kind: OAButtonKind.primary, big: true, onPressed: tutar > 0 ? kaydet : null),
+            OAButton(L('Kaydet'), kind: OAButtonKind.primary, big: true, onPressed: tutar > 0 ? kaydet : null),
           ],
         ),
       ),
@@ -277,8 +278,8 @@ class _TusTakimi extends StatelessWidget {
               onTap: () => bas(t),
               child: Center(
                 child: t == '⌫'
-                    ? const Icon(Icons.backspace_outlined, color: OA.text2, size: 22)
-                    : Text(t, style: oaDisplay(24)),
+                    ? Icon(Icons.backspace_outlined, color: OA.text2, size: 22)
+                    : Text(t == ',' ? Bicim.ondalik : t, style: oaDisplay(24)),
               ),
             ),
           ),

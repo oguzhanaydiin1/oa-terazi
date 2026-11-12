@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'i18n.dart';
 import 'bildirim.dart';
 import 'models.dart';
 import 'pages/ayarlar.dart';
@@ -27,28 +28,80 @@ Future<void> main() async {
   await Bildirim.baslat();
   Store.i.degisince = Bildirim.yenidenPlanla;
   Bildirim.dokunulunca = bildirimIsle;
-  Bildirim.planla();
   runApp(const TeraziApp());
 }
 
-class TeraziApp extends StatelessWidget {
+class TeraziApp extends StatefulWidget {
   const TeraziApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'Terazi',
-        debugShowCheckedModeBanner: false,
-        theme: oaTheme(),
-        navigatorKey: gezgin,
-        locale: const Locale('tr', 'TR'),
-        supportedLocales: const [Locale('tr', 'TR'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: const Kabuk(),
-      );
+  State<TeraziApp> createState() => _TeraziAppState();
+}
+
+/// Dil, tema ve para birimini ayarlardan (ya da "Sistem" seçiliyse cihazdan) uygular.
+class _TeraziAppState extends State<TeraziApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Store.i.addListener(_degisti);
+  }
+
+  @override
+  void dispose() {
+    Store.i.removeListener(_degisti);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  String _iz = '';
+
+  /// Görünüm ayarı değiştiyse bütün uygulamayı yeniden kur (renkler ve metinler her yerde değişsin).
+  void _degisti() {
+    if (_imza() != _iz) setState(() {});
+  }
+
+  @override
+  void didChangePlatformBrightness() => _degisti();
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => _degisti();
+
+  String _imza() {
+    final s = Store.i;
+    final d = WidgetsBinding.instance.platformDispatcher;
+    final en = s.dil == 'en' || (s.dil == 'sistem' && d.locale.languageCode != 'tr');
+    final koyu = s.tema == 'koyu' || (s.tema == 'sistem' && d.platformBrightness == Brightness.dark);
+    return '$en|$koyu|${s.paraBirimi}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _iz = _imza();
+    final p = _iz.split('|');
+    Dil.en = p[0] == 'true';
+    OA.koyu = p[1] == 'true';
+    Bicim.birim = paraBirimi(p[2]);
+    Bildirim.yenidenPlanla();
+    return MaterialApp(
+      key: ValueKey(_iz),
+      title: 'Terazi',
+      debugShowCheckedModeBanner: false,
+      theme: oaTheme(),
+      navigatorKey: gezgin,
+      locale: Dil.en ? const Locale('en') : const Locale('tr', 'TR'),
+      supportedLocales: const [Locale('tr', 'TR'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: OA.koyu ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        child: const Kabuk(),
+      ),
+    );
+  }
 }
 
 /// Bildirime ya da "Ödendi" / "Yarın hatırlat" düğmesine dokunulunca.
@@ -60,14 +113,14 @@ void bildirimIsle(String id, String donem, String? eylem) {
   if (t == null) return;
   final m = ScaffoldMessenger.of(ctx);
   if (t.durum != null) {
-    m.showSnackBar(SnackBar(content: Text('${d.ad} bu ay için zaten kaydedilmiş.')));
+    m.showSnackBar(SnackBar(content: Text(Lx('${d.ad} bu ay için zaten kaydedilmiş.', '${d.ad} is already recorded for this month.'))));
     return;
   }
   if (eylem == 'odendi' && !d.degisken) {
     hizliOdendi(ctx, t);
   } else if (eylem == 'ertele') {
     Store.i.ertele(t);
-    m.showSnackBar(SnackBar(content: Text('${d.ad} için yarın sabah yeniden soracağım.')));
+    m.showSnackBar(SnackBar(content: Text(Lx('${d.ad} için yarın sabah yeniden soracağım.', 'I’ll ask about ${d.ad} again tomorrow morning.'))));
   } else {
     odendiSor(ctx, t);
   }
@@ -81,7 +134,10 @@ class Kabuk extends StatefulWidget {
 }
 
 class _KabukState extends State<Kabuk> {
-  Sayfa sayfa = Sayfa.ozet;
+  /// Tema ya da dil değişince uygulama yeniden kurulur; açık olan bölüm korunsun.
+  static Sayfa _son = Sayfa.ozet;
+  Sayfa get sayfa => _son;
+  set sayfa(Sayfa s) => _son = s;
   late final AppLifecycleListener _dongu;
 
   static const _alt = [Sayfa.ozet, Sayfa.hareketler, Sayfa.takvim, Sayfa.raporlar, Sayfa.ayarlar];
@@ -115,7 +171,7 @@ class _KabukState extends State<Kabuk> {
         builder: (_) => Scaffold(
           appBar: AppBar(
             backgroundColor: OA.bg,
-            title: Text('Bütçeler', style: oaDisplay(20)),
+            title: Text(L('Bütçeler'), style: oaDisplay(20)),
           ),
           body: const ButcelerSayfasi(genis: false),
         ),
@@ -132,11 +188,11 @@ class _KabukState extends State<Kabuk> {
       final f = File('${dir.path}${Platform.pathSeparator}terazi-hareketler-${gunAnahtar(DateTime.now())}.csv');
       await f.writeAsString(Store.i.csv());
       m.showSnackBar(SnackBar(
-        content: Text('İndirilenler klasörüne kaydedildi: ${f.uri.pathSegments.last}'),
-        action: SnackBarAction(label: 'Aç', textColor: OA.amber, onPressed: () => launchUrl(Uri.file(f.path))),
+        content: Text(Lx('İndirilenler klasörüne kaydedildi: ${f.uri.pathSegments.last}', 'Saved to Downloads: ${f.uri.pathSegments.last}')),
+        action: SnackBarAction(label: L('Aç'), textColor: OA.amber, onPressed: () => launchUrl(Uri.file(f.path))),
       ));
     } catch (e) {
-      m.showSnackBar(SnackBar(content: Text('Dışa aktarılamadı: $e')));
+      m.showSnackBar(SnackBar(content: Text(Lx('Dışa aktarılamadı: $e', 'Couldn’t export: $e'))));
     }
   }
 
@@ -167,7 +223,7 @@ class _KabukState extends State<Kabuk> {
             body: Row(
               children: [
                 _KenarCubugu(secili: sayfa, sec: (s) => git(s, true)),
-                const VerticalDivider(width: 1, color: OA.line),
+                VerticalDivider(width: 1, color: OA.line),
                 Expanded(child: SafeArea(child: govde(true))),
               ],
             ),
@@ -183,7 +239,7 @@ class _KabukState extends State<Kabuk> {
         backgroundColor: OA.amber,
         foregroundColor: OA.amberInk,
         icon: const Icon(Icons.add),
-        label: Text('Ekle', style: oaBody(16, color: OA.amberInk, weight: FontWeight.w700)),
+        label: Text(L('Ekle'), style: oaBody(16, color: OA.amberInk, weight: FontWeight.w700)),
       ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: OA.bg2,
@@ -191,12 +247,12 @@ class _KabukState extends State<Kabuk> {
         selectedIndex: i < 0 ? 0 : i,
         onDestinationSelected: (n) => setState(() => sayfa = _alt[n]),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: 'Özet'),
-          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Hareketler'),
-          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Takvim'),
-          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Raporlar'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Ayarlar'),
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: L('Özet')),
+          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: L('Hareketler')),
+          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: L('Takvim')),
+          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: L('Raporlar')),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: L('Ayarlar')),
         ],
       ),
     );
@@ -208,13 +264,13 @@ class _KenarCubugu extends StatelessWidget {
   final Sayfa secili;
   final ValueChanged<Sayfa> sec;
 
-  static const _ogeler = [
-    (Sayfa.ozet, Icons.space_dashboard_outlined, 'Özet'),
-    (Sayfa.hareketler, Icons.receipt_long_outlined, 'Hareketler'),
-    (Sayfa.butceler, Icons.pie_chart_outline, 'Bütçeler'),
-    (Sayfa.takvim, Icons.calendar_month_outlined, 'Ödeme takvimi'),
-    (Sayfa.raporlar, Icons.bar_chart_outlined, 'Raporlar'),
-    (Sayfa.ayarlar, Icons.settings_outlined, 'Ayarlar'),
+  static List<(Sayfa, IconData, String)> get _ogeler => [
+    (Sayfa.ozet, Icons.space_dashboard_outlined, L('Özet')),
+    (Sayfa.hareketler, Icons.receipt_long_outlined, L('Hareketler')),
+    (Sayfa.butceler, Icons.pie_chart_outline, L('Bütçeler')),
+    (Sayfa.takvim, Icons.calendar_month_outlined, L('Ödeme takvimi')),
+    (Sayfa.raporlar, Icons.bar_chart_outlined, L('Raporlar')),
+    (Sayfa.ayarlar, Icons.settings_outlined, L('Ayarlar')),
   ];
 
   @override
@@ -259,9 +315,9 @@ class _KenarCubugu extends StatelessWidget {
                 ),
               ),
             const Spacer(),
-            Text('Ctrl+N: yeni kayıt', style: oaBody(13, color: OA.faint)),
+            Text(L('Ctrl+N: yeni kayıt'), style: oaBody(13, color: OA.faint)),
             const SizedBox(height: 4),
-            Text('Verilerin bu bilgisayarda saklanır', style: oaBody(13, color: OA.faint)),
+            Text(L('Verilerin bu bilgisayarda saklanır'), style: oaBody(13, color: OA.faint)),
           ],
         ),
       );

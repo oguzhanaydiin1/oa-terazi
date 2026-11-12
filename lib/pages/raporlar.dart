@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import '../kategoriler.dart';
 import '../models.dart';
 import '../store.dart';
@@ -33,7 +34,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${aylar[ay.month - 1]} gideri', style: oaBody(15, color: OA.text2, weight: FontWeight.w600)),
+                Text(Lx('${aylar[ay.month - 1]} gideri', 'Spending in ${aylar[ay.month - 1]}'), style: oaBody(15, color: OA.text2, weight: FontWeight.w600)),
                 Text(para(gider, kurussuz: true), style: oaDisplay(38)),
                 if (kiyas != null) Text(kiyas, style: oaBody(14, color: OA.muted)),
                 const SizedBox(height: 18),
@@ -46,14 +47,14 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Baslik('Nereye gitti?'),
+                Baslik(L('Nereye gitti?')),
                 if (kat.isEmpty)
-                  Text('Bu ay gider yok.', style: oaBody(15, color: OA.muted))
+                  Text(L('Bu ay gider yok.'), style: oaBody(15, color: OA.muted))
                 else ...[
                   for (final e in kat.take(5)) _KategoriSatiri(e.key, e.value, gider),
                   if (kat.length > 5)
                     _KategoriSatiri(null, kat.skip(5).fold<int>(0, (a, e) => a + e.value), gider,
-                        ad: 'Diğer ${kat.length - 5} kategori'),
+                        ad: Lx('Diğer ${kat.length - 5} kategori', '${kat.length - 5} other categories')),
                 ],
               ],
             ),
@@ -71,7 +72,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.lightbulb_outline, color: OA.amber),
+                      Icon(Icons.lightbulb_outline, color: OA.amber),
                       const SizedBox(width: 10),
                       Expanded(child: Text(yorum, style: oaBody(15, color: OA.text2))),
                     ],
@@ -80,7 +81,7 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
 
           final baslik = Row(
             children: [
-              Expanded(child: Text('Raporlar', style: oaDisplay(widget.genis ? 30 : 24))),
+              Expanded(child: Text(L('Raporlar'), style: oaDisplay(widget.genis ? 30 : 24))),
               AySecici(ay, (a) => setState(() => ay = a)),
             ],
           );
@@ -123,8 +124,10 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
     for (final e in s.butceler.entries) {
       final h = bu[e.key] ?? 0;
       if (h > e.value) {
-        return '${kategori(e.key).ad} bütçeni ${para(h - e.value, kurussuz: true)} aştın '
-            '(${para(h, kurussuz: true)} / ${para(e.value, kurussuz: true)}).';
+        return Lx('${kategori(e.key).ad} bütçeni ${para(h - e.value, kurussuz: true)} aştın '
+            '(${para(h, kurussuz: true)} / ${para(e.value, kurussuz: true)}).',
+            'You’re ${para(h - e.value, kurussuz: true)} over your ${kategori(e.key).ad} budget '
+            '(${para(h, kurussuz: true)} / ${para(e.value, kurussuz: true)}).');
       }
     }
     String? enCok;
@@ -137,8 +140,8 @@ class _RaporlarSayfasiState extends State<RaporlarSayfasi> {
       }
     }
     if (enCok != null && (once[enCok] ?? 0) > 0) {
-      return 'Geçen aya göre en çok artan kalem '
-          '${kategori(enCok).ad}: ${para(fark, kurussuz: true)} fazla.';
+      return Lx('Geçen aya göre en çok artan kalem ${kategori(enCok).ad}: ${para(fark, kurussuz: true)} fazla.',
+          'The category that grew most since last month is ${kategori(enCok).ad}: ${para(fark, kurussuz: true)} more.');
     }
     return null;
   }

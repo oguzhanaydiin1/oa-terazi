@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'i18n.dart';
 import 'kategoriler.dart';
 import 'models.dart';
 import 'store.dart';
@@ -90,7 +91,8 @@ class Bildirim {
           if (d.hatirlat > 0) {
             final once = DateTime(t.tarih.year, t.tarih.month, t.tarih.day - d.hatirlat, 9);
             if (once.isAfter(simdi)) {
-              await _kur(id++, once, '${d.ad} ${d.hatirlat == 1 ? 'yarın' : '${d.hatirlat} gün sonra'}',
+              await _kur(id++, once, Lx('${d.ad} ${d.hatirlat == 1 ? 'yarın' : '${d.hatirlat} gün sonra'}',
+                      '${d.ad} ${d.hatirlat == 1 ? 'tomorrow' : 'in ${d.hatirlat} days'}'),
                   '$tutar · ${k.ad} · ${tarihYazi(t.tarih)}', yuk, eylemli: false);
             }
           }
@@ -98,8 +100,10 @@ class Bildirim {
           final gun = ertelenen != null && ertelenen.isAfter(t.tarih) ? ertelenen : t.tarih;
           final an = DateTime(gun.year, gun.month, gun.day, 9);
           if (an.isAfter(simdi)) {
-            final baslik = gun == t.tarih ? 'Bugün ödeme günü: ${d.ad}' :'${d.ad} ödendi mi?';
-            await _kur(id++, an, baslik, '$tutar · Ödediysen tek dokunuşla kaydet.', yuk, eylemli: true);
+            final baslik = gun == t.tarih
+                ? Lx('Bugün ödeme günü: ${d.ad}', 'Payment due today: ${d.ad}')
+                : Lx('${d.ad} ödendi mi?', '${d.ad}: paid yet?');
+            await _kur(id++, an, baslik, Lx('$tutar · Ödediysen tek dokunuşla kaydet.', '$tutar · Paid it? Record it in one tap.'), yuk, eylemli: true);
           }
         }
       }
@@ -112,15 +116,15 @@ class Bildirim {
     final ayrinti = NotificationDetails(
       android: AndroidNotificationDetails(
         'odemeler',
-        'Ödeme hatırlatmaları',
-        channelDescription: 'Düzenli ödemelerin günü yaklaşınca ve geldiğinde',
+        L('Ödeme hatırlatmaları'),
+        channelDescription: L('Düzenli ödemelerin günü yaklaşınca ve geldiğinde'),
         importance: Importance.high,
         priority: Priority.high,
         color: const Color(0xFFF2A541),
         actions: eylemli
-            ? const [
-                AndroidNotificationAction('odendi', 'Ödendi', showsUserInterface: true, cancelNotification: true),
-                AndroidNotificationAction('ertele', 'Yarın hatırlat', showsUserInterface: true, cancelNotification: true),
+            ? [
+                AndroidNotificationAction('odendi', L('Ödendi'), showsUserInterface: true, cancelNotification: true),
+                AndroidNotificationAction('ertele', L('Yarın hatırlat'), showsUserInterface: true, cancelNotification: true),
               ]
             : null,
       ),

@@ -1,79 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// OA Labs renkleri: oalabs.dev site.css ile birebir (tek tema: koyu).
+/// OA Labs renkleri: koyu tema oalabs.dev ile birebir; açık tema aynı tonların krem zeminli hâli.
+/// [koyu] uygulama açılırken ve tema değişince TeraziApp tarafından ayarlanır.
 class OA {
   OA._();
-  static const bg = Color(0xFF0D0F16);
-  static const bg2 = Color(0xFF11131C);
-  static const surface = Color(0xFF151824);
-  static const surface2 = Color(0xFF1C2030);
-  static const line = Color(0xFF1E2232);
-  static const border = Color(0xFF262B3D);
-  static const border2 = Color(0xFF2A2F43);
-  static const text = Color(0xFFEEEAE2);
-  static const text2 = Color(0xFFB7BACA);
-  static const muted = Color(0xFF9EA2B3);
-  static const faint = Color(0xFF7E8296);
-  static const amber = Color(0xFFF2A541);
-  static const amberHi = Color(0xFFF7BF6E);
+  static bool koyu = true;
+  static Color _(int d, int l) => Color(koyu ? d : l);
+  static Color get bg => _(0xFF0D0F16, 0xFFF6F3EC);
+  static Color get bg2 => _(0xFF11131C, 0xFFEFEBE2);
+  static Color get surface => _(0xFF151824, 0xFFFFFFFF);
+  static Color get surface2 => _(0xFF1C2030, 0xFFF0ECE3);
+  static Color get line => _(0xFF1E2232, 0xFFE7E1D5);
+  static Color get border => _(0xFF262B3D, 0xFFE3DDD0);
+  static Color get border2 => _(0xFF2A2F43, 0xFFD6CFBF);
+  static Color get text => _(0xFFEEEAE2, 0xFF1A1710);
+  static Color get text2 => _(0xFFB7BACA, 0xFF4A4336);
+  static Color get muted => _(0xFF9EA2B3, 0xFF6B6457);
+  static Color get faint => _(0xFF7E8296, 0xFF8F8878);
+  static Color get amber => _(0xFFF2A541, 0xFFE0901F);
+  static Color get amberHi => _(0xFFF7BF6E, 0xFFC97A12);
   static const amberInk = Color(0xFF14110A);
-  static const green = Color(0xFF5BC48C);
-  static const blue = Color(0xFF6EA8FE);
-  static const danger = Color(0xFFF08A7E);
-  static const soonInk = Color(0xFF7CC88A);
-  static const soonBg = Color(0x247CC88A);
-  static const betaInk = Color(0xFF8FB8FF);
-  static const betaBg = Color(0x246EA8FE);
-  static const tileDim = Color(0xFF5D606B);
+  static Color get green => _(0xFF5BC48C, 0xFF2E9D63);
+  static Color get blue => _(0xFF6EA8FE, 0xFF3B7DDB);
+  static Color get danger => _(0xFFF08A7E, 0xFFD2553F);
 }
 
 /// Başlık yazısı: Bricolage Grotesque 800.
-TextStyle oaDisplay(double size, {Color color = OA.text}) => GoogleFonts.bricolageGrotesque(
+TextStyle oaDisplay(double size, {Color? color}) => GoogleFonts.bricolageGrotesque(
       fontSize: size,
       fontWeight: FontWeight.w800,
-      color: color,
+      color: color ?? OA.text,
       letterSpacing: -0.02 * size,
       height: 1.15,
     );
 
 /// Gövde yazısı: DM Sans.
-TextStyle oaBody(double size, {Color color = OA.text, FontWeight weight = FontWeight.w400, double height = 1.45}) =>
-    GoogleFonts.dmSans(fontSize: size, fontWeight: weight, color: color, height: height);
+TextStyle oaBody(double size, {Color? color, FontWeight weight = FontWeight.w400, double height = 1.45}) =>
+    GoogleFonts.dmSans(fontSize: size, fontWeight: weight, color: color ?? OA.text, height: height);
 
 ThemeData oaTheme() {
+  final scheme = OA.koyu
+      ? ColorScheme.dark(
+          primary: OA.amber,
+          onPrimary: OA.amberInk,
+          secondary: OA.amber,
+          onSecondary: OA.amberInk,
+          surface: OA.surface,
+          onSurface: OA.text,
+          error: OA.danger,
+        )
+      : ColorScheme.light(
+          primary: OA.amber,
+          onPrimary: OA.amberInk,
+          secondary: OA.amber,
+          onSecondary: OA.amberInk,
+          surface: OA.surface,
+          onSurface: OA.text,
+          error: OA.danger,
+        );
   final base = ThemeData(
-    brightness: Brightness.dark,
+    brightness: OA.koyu ? Brightness.dark : Brightness.light,
     useMaterial3: true,
     scaffoldBackgroundColor: OA.bg,
-    colorScheme: const ColorScheme.dark(
-      primary: OA.amber,
-      onPrimary: OA.amberInk,
-      secondary: OA.amber,
-      onSecondary: OA.amberInk,
-      surface: OA.surface,
-      onSurface: OA.text,
-      error: OA.danger,
-    ),
+    colorScheme: scheme,
   );
   return base.copyWith(
     textTheme: GoogleFonts.dmSansTextTheme(base.textTheme).apply(bodyColor: OA.text, displayColor: OA.text),
     dividerColor: OA.line,
+    dialogTheme: DialogThemeData(backgroundColor: OA.surface),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: OA.surface2,
-      contentTextStyle: oaBody(15),
+      backgroundColor: OA.koyu ? OA.surface2 : const Color(0xFF1A1710),
+      contentTextStyle: oaBody(15, color: OA.koyu ? null : const Color(0xFFF6F3EC)),
+      actionTextColor: OA.koyu ? OA.amber : const Color(0xFFF2A541),
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: OA.border)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: OA.border)),
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(color: OA.amber, linearTrackColor: OA.surface2),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: OA.amber, linearTrackColor: OA.surface2),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: OA.bg,
+      fillColor: OA.koyu ? OA.bg : OA.surface,
       hintStyle: oaBody(17, color: OA.faint),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: OA.border2)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: OA.amber, width: 2)),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: OA.border2)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: OA.border2)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: OA.amber, width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: OA.border2)),
     ),
   );
 }
@@ -143,21 +154,6 @@ class OACard extends StatelessWidget {
       );
 }
 
-/// Küçük etiket (Yakında, Beta, Yalnız Windows).
-class OAChip extends StatelessWidget {
-  const OAChip(this.label, {super.key, this.ink = OA.text2, this.bg = OA.surface2});
-  final String label;
-  final Color ink;
-  final Color bg;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-        child: Text(label, style: oaBody(13, color: ink, weight: FontWeight.w600, height: 1.1)),
-      );
-}
-
 /// Terazi logosu (K4-B): amber zemin üzerinde çapraz iki para, önde artı, arkada eksi.
 class TeraziMark extends StatelessWidget {
   const TeraziMark({super.key, this.size = 32});
@@ -174,15 +170,15 @@ class _MarkPainter extends CustomPainter {
     canvas.scale(size.width / 100);
     canvas.drawRRect(
       RRect.fromRectAndRadius(const Rect.fromLTWH(0, 0, 100, 100), const Radius.circular(23)),
-      Paint()..color = OA.amber,
+      Paint()..color = const Color(0xFFF2A541),
     );
-    canvas.drawCircle(const Offset(61, 40), 23, Paint()..color = OA.text);
+    canvas.drawCircle(const Offset(61, 40), 23, Paint()..color = const Color(0xFFEEEAE2));
     canvas.drawCircle(const Offset(40, 60), 23, Paint()..color = OA.amberInk);
     canvas.drawCircle(
       const Offset(40, 60),
       23,
       Paint()
-        ..color = OA.amber
+        ..color = const Color(0xFFF2A541)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 5,
     );
@@ -191,7 +187,7 @@ class _MarkPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = w
       ..strokeCap = StrokeCap.round;
-    final plus = line(OA.amber, 6.5);
+    final plus = line(const Color(0xFFF2A541), 6.5);
     canvas.drawLine(const Offset(31.5, 60), const Offset(48.5, 60), plus);
     canvas.drawLine(const Offset(40, 51.5), const Offset(40, 68.5), plus);
     canvas.drawLine(const Offset(63, 33), const Offset(75, 33), line(OA.amberInk, 6));

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:terazi/i18n.dart';
 import 'package:terazi/models.dart';
 import 'package:terazi/store.dart';
 
@@ -151,5 +152,26 @@ void main() {
     final k2 = Kayit.fromJson(k.toJson());
     expect(k2.tarih, DateTime(2026, 1, 2));
     expect(k2.tur, Tur.gelir);
+  });
+
+  test('İngilizce ve başka para birimleri', () {
+    Dil.en = true;
+    Bicim.birim = paraBirimi('USD');
+    expect(para(824000, kurussuz: true), r'$8,240');
+    expect(para(64250), r'$642.50');
+    expect(paraYaz(425050), '4250.50');
+    expect(paraOku('1,250.75'), 125075);
+    expect(paraOku('4250.5'), 425050);
+    expect(ayAdi(DateTime(2026, 11)), 'November 2026');
+    expect(kalanYazi(DateTime(2026, 11, 14), DateTime(2026, 11, 11)), 'in 3 days');
+    Bicim.birim = paraBirimi('RUB');
+    expect(para(-824000, kurussuz: true), '−8,240 ₽');
+    Dil.en = false;
+    expect(para(824000, kurussuz: true), '8.240 ₽');
+    expect(paraOku('4.250,50'), 425050);
+    Bicim.birim = paraBirimi('TRY');
+    expect(ingSira(1), '1st');
+    expect(ingSira(12), '12th');
+    expect(ingSira(22), '22nd');
   });
 }

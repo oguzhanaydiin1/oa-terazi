@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'i18n.dart';
 import 'kategoriler.dart';
 import 'models.dart';
 import 'theme.dart';
@@ -8,13 +9,15 @@ import 'theme.dart';
 
 /// "KAS / 14" tarih kutusu.
 class TarihKutusu extends StatelessWidget {
-  const TarihKutusu(this.tarih, {super.key, this.renk = OA.amber, this.boyut = 52});
+  const TarihKutusu(this.tarih, {super.key, this.renk, this.boyut = 52});
   final DateTime tarih;
-  final Color renk;
+  final Color? renk;
   final double boyut;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final renk = this.renk ?? OA.amber;
+    return Container(
         width: boyut,
         height: boyut,
         decoration: BoxDecoration(
@@ -31,6 +34,7 @@ class TarihKutusu extends StatelessWidget {
           ],
         ),
       );
+  }
 }
 
 /// Bölüm başlığı ve sağında isteğe bağlı bağlantı.
@@ -59,9 +63,9 @@ class Baslik extends StatelessWidget {
 
 /// İlerleme çubuğu; sınır aşıldıysa kırmızı.
 class Cubuk extends StatelessWidget {
-  const Cubuk(this.oran, {super.key, this.renk = OA.amber, this.yukseklik = 8});
+  const Cubuk(this.oran, {super.key, this.renk, this.yukseklik = 8});
   final double oran;
-  final Color renk;
+  final Color? renk;
   final double yukseklik;
 
   @override
@@ -74,7 +78,7 @@ class Cubuk extends StatelessWidget {
               Container(color: OA.surface2),
               FractionallySizedBox(
                 widthFactor: oran.clamp(0.0, 1.0).toDouble(),
-                child: Container(color: oran > 1 ? OA.danger : renk),
+                child: Container(color: oran > 1 ? OA.danger : (renk ?? OA.amber)),
               ),
             ],
           ),
@@ -93,7 +97,7 @@ class HareketSatiri extends StatelessWidget {
   Widget build(BuildContext context) {
     final kat = kategori(k.kategori);
     final ad = k.aciklama.isNotEmpty ? k.aciklama : kat.ad;
-    final alt = k.tur == Tur.gelir ? 'Gelir' : kat.ad;
+    final alt = k.tur == Tur.gelir ? L('Gelir') : kat.ad;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -162,15 +166,15 @@ class AySecici extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            tooltip: 'Önceki ay',
+            tooltip: L('Önceki ay'),
             onPressed: () => degis(ayEkle(ay, -1)),
-            icon: const Icon(Icons.chevron_left, color: OA.text2),
+            icon: Icon(Icons.chevron_left, color: OA.text2),
           ),
           Text(ayAdi(ay), style: oaBody(16, weight: FontWeight.w600)),
           IconButton(
-            tooltip: 'Sonraki ay',
+            tooltip: L('Sonraki ay'),
             onPressed: () => degis(ayEkle(ay, 1)),
-            icon: const Icon(Icons.chevron_right, color: OA.text2),
+            icon: Icon(Icons.chevron_right, color: OA.text2),
           ),
         ],
       );
@@ -216,7 +220,7 @@ Future<T?> altSayfa<T>(BuildContext context, Widget Function(BuildContext) build
       context: context,
       builder: (c) => Dialog(
         backgroundColor: OA.bg2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: OA.border)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: OA.border)),
         child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460, maxHeight: 760), child: build(c)),
       ),
     );
@@ -239,10 +243,15 @@ Color halRengi(TekrarHali h) => switch (h) {
     };
 
 String halYazi(Tekrar t, DateTime bugun) => switch (t.hal(bugun)) {
-      TekrarHali.odendi => 'Ödendi',
-      TekrarHali.atlandi => 'Bu ay yok',
-      TekrarHali.onceden => 'Önceden',
-      TekrarHali.gecikti => 'Ödendi mi?',
-      TekrarHali.bugun => 'Bugün',
+      TekrarHali.odendi => L('Ödendi'),
+      TekrarHali.atlandi => L('Bu ay yok'),
+      TekrarHali.onceden => L('Önceden'),
+      TekrarHali.gecikti => L('Ödendi mi?'),
+      TekrarHali.bugun => L('Bugün'),
       TekrarHali.yaklasan => kalanYazi(t.tarih, bugun),
     };
+
+/// Tutar kutusu: para biriminin simgesi başta ya da sonda.
+InputDecoration paraKutusu({bool ipucu = true}) => Bicim.birim.sonda
+    ? InputDecoration(suffixText: ' ${Bicim.birim.sembol}', hintText: ipucu ? '0' : null)
+    : InputDecoration(prefixText: '${Bicim.birim.sembol} ', hintText: ipucu ? '0' : null);

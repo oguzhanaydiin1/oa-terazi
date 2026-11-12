@@ -1,6 +1,8 @@
 // Terazi veri modeli. Flutter'a bağlı değil; test/model_test.dart doğrudan bunu dener.
 // Tutarlar her yerde kuruş cinsinden tam sayıdır (₺642,50 = 64250).
 
+import 'i18n.dart';
+
 enum Tur { gelir, gider }
 
 /// Tek bir gelir ya da gider kaydı.
@@ -150,9 +152,12 @@ class Tekrar {
   AyDurumu? get durum => duzenli.durumlar[donem];
 
   /// "8. taksit / 24" ya da "Süresiz".
-  String get sira => duzenli.suresiz
-      ? 'Süresiz'
-      : '$no. ${duzenli.kategori == 'kredi' ? 'taksit' : 'ödeme'} / ${duzenli.ayAdedi}';
+  String get sira {
+    if (duzenli.suresiz) return L('Süresiz');
+    final kredi = duzenli.kategori == 'kredi';
+    return Lx('$no. ${kredi ? 'taksit' : 'ödeme'} / ${duzenli.ayAdedi}',
+        '${kredi ? 'Instalment' : 'Payment'} $no of ${duzenli.ayAdedi}');
+  }
 
   TekrarHali hal(DateTime bugun) {
     final d = durum;
@@ -264,9 +269,15 @@ String _iki(int n) => n.toString().padLeft(2, '0');
 String ayAnahtar(DateTime d) => '${d.year}-${_iki(d.month)}';
 String gunAnahtar(DateTime d) => '${d.year}-${_iki(d.month)}-${_iki(d.day)}';
 
-const aylar = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-const ayKisa = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-const gunKisa = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const _aylarTr = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const _aylarEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const _ayKisaTr = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+const _ayKisaEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const _gunKisaTr = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const _gunKisaEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+List<String> get aylar => Dil.en ? _aylarEn : _aylarTr;
+List<String> get ayKisa => Dil.en ? _ayKisaEn : _ayKisaTr;
+List<String> get gunKisa => Dil.en ? _gunKisaEn : _gunKisaTr;
 
 /// "ayın 14'ünde", "ayın 6'sında".
 String ayinGunu(int n) {
@@ -275,6 +286,12 @@ String ayinGunu(int n) {
   final o = n ~/ 10;
   final ek = n % 10 != 0 ? birler[n % 10] : onlar[o > 3 ? 3 : o];
   return "ayın $n'$ek";
+}
+
+/// İngilizce sıra eki: 1st, 2nd, 14th, 22nd.
+String ingSira(int n) {
+  if (n % 100 >= 11 && n % 100 <= 13) return '${n}th';
+  return '$n${const ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][n % 10]}';
 }
 
 /// "Ekim'den": ayın ayrılma hâli.
@@ -288,6 +305,11 @@ String? oncekiAyla(DateTime ay, List<Kayit> kayitlar) {
   if (a == 0) return null;
   final b = ayGideri(ay, kayitlar);
   final f = ((b - a) * 100 / a).round();
+  if (Dil.en) {
+    final m = _aylarEn[once.month - 1];
+    if (f == 0) return 'Same as $m';
+    return '${f.abs()}% ${f < 0 ? 'less' : 'more'} than $m';
+  }
   if (f == 0) return "${ayDen[once.month - 1]} farksız";
   return "${ayDen[once.month - 1]} %${f.abs()} ${f < 0 ? 'az' : 'fazla'}";
 }
@@ -298,52 +320,103 @@ String tarihYazi(DateTime d) => '${d.day} ${aylar[d.month - 1]}';
 /// "Bugün", "Dün", "11 Kasım".
 String gunYazi(DateTime d, DateTime bugun) {
   final f = gunBasi(bugun).difference(gunBasi(d)).inDays;
-  if (f == 0) return 'Bugün';
-  if (f == 1) return 'Dün';
-  if (f == -1) return 'Yarın';
+  if (f == 0) return L('Bugün');
+  if (f == 1) return L('Dün');
+  if (f == -1) return L('Yarın');
   return d.year == bugun.year ? tarihYazi(d) : '${tarihYazi(d)} ${d.year}';
 }
 
-/// "3 gün sonra", "Bugün", "2 gün gecikti".
+/// "3 gün sonra", "Bugün", "2 gün geçti".
 String kalanYazi(DateTime d, DateTime bugun) {
   final f = gunBasi(d).difference(gunBasi(bugun)).inDays;
-  if (f == 0) return 'Bugün';
-  if (f == 1) return 'Yarın';
-  if (f > 1) return '$f gün sonra';
-  if (f == -1) return 'Dün geçti';
-  return '${-f} gün geçti';
+  if (f == 0) return L('Bugün');
+  if (f == 1) return L('Yarın');
+  if (f > 1) return Lx('$f gün sonra', 'in $f days');
+  if (f == -1) return Lx('Dün geçti', 'Was yesterday');
+  return Lx('${-f} gün geçti', '${-f} days ago');
 }
 
 // ---- Para ----
+
+/// Para birimi: yalnızca simge ve yazılış; tutarlar çevrilmez.
+class ParaBirimi {
+  const ParaBirimi(this.kod, this.sembol, this.ad, this.adEn, {this.sonda = false});
+  final String kod;
+  final String sembol;
+  final String ad;
+  final String adEn;
+  final bool sonda; // "8.240 ₽" gibi simge sonda mı
+}
+
+const paraBirimleri = <ParaBirimi>[
+  ParaBirimi('TRY', '₺', 'Türk lirası', 'Turkish lira'),
+  ParaBirimi('USD', r'$', 'ABD doları', 'US dollar'),
+  ParaBirimi('EUR', '€', 'Euro', 'Euro'),
+  ParaBirimi('GBP', '£', 'İngiliz sterlini', 'British pound'),
+  ParaBirimi('RUB', '₽', 'Rus rublesi', 'Russian rouble', sonda: true),
+  ParaBirimi('AZN', '₼', 'Azerbaycan manatı', 'Azerbaijani manat', sonda: true),
+  ParaBirimi('CHF', 'CHF', 'İsviçre frangı', 'Swiss franc', sonda: true),
+];
+
+ParaBirimi paraBirimi(String? kod) => paraBirimleri.firstWhere((p) => p.kod == kod, orElse: () => paraBirimleri.first);
+
+/// Sayı biçimi ve para birimi. TeraziApp ayarlar; varsayılan Türkçe ve TL.
+class Bicim {
+  Bicim._();
+  static ParaBirimi birim = paraBirimleri.first;
+  static String get binlik => Dil.en ? ',' : '.';
+  static String get ondalik => Dil.en ? '.' : ',';
+}
+
+/// 8240 → "8.240" (Türkçe) / "8,240" (İngilizce).
+String binlikli(int n) {
+  final s = n.toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(Bicim.binlik);
+    b.write(s[i]);
+  }
+  return b.toString();
+}
+
+/// Sayının yanına para birimini koyar: "₺8.240", "8.240 ₽".
+String sembolle(String sayi) => Bicim.birim.sonda ? '$sayi ${Bicim.birim.sembol}' : '${Bicim.birim.sembol}$sayi';
 
 /// 64250 → "₺642,50". [kurussuz]: tam liraysa kuruşu yazma ("₺8.240").
 String para(int kurus, {bool isaret = false, bool kurussuz = false}) {
   final eksi = kurus < 0;
   final m = kurus.abs();
-  final lira = m ~/ 100;
   final k = m % 100;
-  final s = lira.toString();
-  final b = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) b.write('.');
-    b.write(s[i]);
-  }
-  var out = '₺$b';
-  if (!(kurussuz && k == 0)) out += ',${_iki(k)}';
+  var sayi = binlikli(m ~/ 100);
+  if (!(kurussuz && k == 0)) sayi += '${Bicim.ondalik}${_iki(k)}';
+  final out = sembolle(sayi);
   if (eksi) return '−$out';
   if (isaret && kurus > 0) return '+$out';
   return out;
 }
 
-/// "642,50" / "642.50" / "1.250" → kuruş. Geçersizse null.
+/// Kutuya yazmak için: 425050 → "4250,50" (Türkçe) / "4250.50"; tam sayıysa "4250".
+String paraYaz(int kurus) {
+  final l = kurus ~/ 100, c = kurus % 100;
+  return c == 0 ? '$l' : '$l${Bicim.ondalik}${_iki(c)}';
+}
+
+/// "642,50" / "642.50" / "1.250" / "1,250.75" → kuruş. Geçersizse null.
+/// İki ayırıcı da varsa sondaki ondalıktır; tek ayırıcı arkasından tam üç basamaklı gruplar geliyorsa binliktir.
 int? paraOku(String s) {
-  var t = s.trim().replaceAll('₺', '').replaceAll(' ', '');
+  var t = s.trim().replaceAll(RegExp(r'[^0-9.,]'), '');
   if (t.isEmpty) return null;
-  if (t.contains(',')) {
-    t = t.replaceAll('.', '').replaceAll(',', '.');
-  } else if (RegExp(r'^\d{1,3}(\.\d{3})+$').hasMatch(t)) {
-    t = t.replaceAll('.', '');
+  final sonNokta = t.lastIndexOf('.'), sonVirgul = t.lastIndexOf(',');
+  if (sonNokta >= 0 && sonVirgul >= 0) {
+    final ond = sonNokta > sonVirgul ? '.' : ',';
+    final bin = ond == '.' ? ',' : '.';
+    t = t.replaceAll(bin, '').replaceAll(ond, '.');
+  } else if (sonNokta >= 0 || sonVirgul >= 0) {
+    final ay = sonNokta >= 0 ? '.' : ',';
+    final binlikMi = RegExp('^\\d{1,3}(\\${ay}\\d{3})+\$').hasMatch(t);
+    t = binlikMi ? t.replaceAll(ay, '') : t.replaceAll(ay, '.');
   }
+  if ('.'.allMatches(t).length > 1) return null;
   final v = double.tryParse(t);
   if (v == null || v < 0) return null;
   return (v * 100).round();

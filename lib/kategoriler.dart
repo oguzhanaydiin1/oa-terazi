@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'i18n.dart';
 import 'models.dart';
 
 class Kategori {
-  const Kategori(this.id, this.ad, this.ikon, this.renk, this.tur);
+  const Kategori(this.id, this._ad, this.ikon, this.renk, this.tur);
   final String id;
-  final String ad;
+  final String _ad;
+  String get ad => L(_ad);
   final IconData ikon;
   final Color renk;
   final Tur tur;

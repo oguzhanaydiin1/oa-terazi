@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import '../kategoriler.dart';
 import '../models.dart';
 import '../store.dart';
@@ -60,7 +61,7 @@ class _HareketlerSayfasiState extends State<HareketlerSayfasi> {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text('Hareketler', style: oaDisplay(widget.genis ? 30 : 24))),
+                  Expanded(child: Text(L('Hareketler'), style: oaDisplay(widget.genis ? 30 : 24))),
                   AySecici(ay, (a) => setState(() => ay = a)),
                 ],
               ),
@@ -68,8 +69,8 @@ class _HareketlerSayfasiState extends State<HareketlerSayfasi> {
               TextField(
                 onChanged: (v) => setState(() => ara = v),
                 style: oaBody(16),
-                decoration: const InputDecoration(
-                  hintText: 'Ara: açıklama ya da kategori',
+                decoration: InputDecoration(
+                  hintText: L('Ara: açıklama ya da kategori'),
                   prefixIcon: Icon(Icons.search, color: OA.faint),
                   isDense: true,
                 ),
@@ -78,9 +79,9 @@ class _HareketlerSayfasiState extends State<HareketlerSayfasi> {
               Wrap(
                 spacing: 8,
                 children: [
-                  Secim('Tümü', filtre == null, () => setState(() => filtre = null)),
-                  Secim('Gider', filtre == Tur.gider, () => setState(() => filtre = Tur.gider)),
-                  Secim('Gelir', filtre == Tur.gelir, () => setState(() => filtre = Tur.gelir)),
+                  Secim(L('Tümü'), filtre == null, () => setState(() => filtre = null)),
+                  Secim(L('Gider'), filtre == Tur.gider, () => setState(() => filtre = Tur.gider)),
+                  Secim(L('Gelir'), filtre == Tur.gelir, () => setState(() => filtre = Tur.gelir)),
                 ],
               ),
               const SizedBox(height: 12),
@@ -88,15 +89,15 @@ class _HareketlerSayfasiState extends State<HareketlerSayfasi> {
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 child: Row(
                   children: [
-                    Expanded(child: _Toplam('Gelir', para(gelir), OA.green)),
-                    Expanded(child: _Toplam('Gider', para(gider), OA.text)),
-                    Expanded(child: _Toplam('Net', para(gelir - gider, isaret: true), gelir >= gider ? OA.amber : OA.danger)),
+                    Expanded(child: _Toplam(L('Gelir'), para(gelir), OA.green)),
+                    Expanded(child: _Toplam(L('Gider'), para(gider), OA.text)),
+                    Expanded(child: _Toplam(L('Net'), para(gelir - gider, isaret: true), gelir >= gider ? OA.amber : OA.danger)),
                   ],
                 ),
               ),
               if (liste.isEmpty)
-                Bos(Icons.receipt_long_outlined, 'Bu ay için kayıt yok',
-                    q.isNotEmpty ? 'Aramana uyan kayıt bulunamadı.' : 'Eklediğin gelir ve giderler burada gün gün listelenir.')
+                Bos(Icons.receipt_long_outlined, L('Bu ay için kayıt yok'),
+                    q.isNotEmpty ? L('Aramana uyan kayıt bulunamadı.') : L('Eklediğin gelir ve giderler burada gün gün listelenir.'))
               else
                 ...govde,
             ],

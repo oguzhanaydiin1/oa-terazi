@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import '../kategoriler.dart';
 import '../models.dart';
 import '../store.dart';
@@ -47,9 +48,9 @@ class OzetSayfasi extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _Kucuk('Gelir', para(o.gelir, isaret: true, kurussuz: true), OA.green)),
+            Expanded(child: _Kucuk(L('Gelir'), para(o.gelir, isaret: true, kurussuz: true), OA.green)),
             const SizedBox(width: 12),
-            Expanded(child: _Kucuk('Gider', para(-o.gider, kurussuz: true), OA.text)),
+            Expanded(child: _Kucuk(L('Gider'), para(-o.gider, kurussuz: true), OA.text)),
           ],
         ),
         for (final t in sor) ...[const SizedBox(height: 12), _SoruKarti(t)],
@@ -58,18 +59,18 @@ class OzetSayfasi extends StatelessWidget {
         if (bos) ...[
           const SizedBox(height: 12),
           OACard(
-            child: Bos(Icons.account_balance_wallet_outlined, 'Terazi\'ye hoş geldin',
-                'İlk gelirini ya da giderini ekle; ay sonuna kadar günde ne kadar harcayabileceğini hesaplayayım.',
-                eylem: 'İlk kaydı ekle', onEylem: () => kayitAc(context, tur: Tur.gelir)),
+            child: Bos(Icons.account_balance_wallet_outlined, L('Terazi\'ye hoş geldin'),
+                L('İlk gelirini ya da giderini ekle; ay sonuna kadar günde ne kadar harcayabileceğini hesaplayayım.'),
+                eylem: L('İlk kaydı ekle'), onEylem: () => kayitAc(context, tur: Tur.gelir)),
           ),
         ] else ...[
           const SizedBox(height: 24),
-          Baslik('Bütçeler', eylem: 'Tümü', onEylem: () => git(Sayfa.butceler)),
+          Baslik(L('Bütçeler'), eylem: L('Tümü'), onEylem: () => git(Sayfa.butceler)),
           _ButceListesi(adet: 3, git: git),
           const SizedBox(height: 18),
-          Baslik('Son hareketler', eylem: 'Tümü', onEylem: () => git(Sayfa.hareketler)),
+          Baslik(L('Son hareketler'), eylem: L('Tümü'), onEylem: () => git(Sayfa.hareketler)),
           if (s.kayitlar.isEmpty)
-            Text('Henüz kayıt yok.', style: oaBody(15, color: OA.muted))
+            Text(L('Henüz kayıt yok.'), style: oaBody(15, color: OA.muted))
           else
             for (final k in s.kayitlar.take(5)) HareketSatiri(k, bugun: simdi, onTap: () => kayitAc(context, kayit: k)),
         ],
@@ -97,28 +98,28 @@ class OzetSayfasi extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(ayAdi(simdi), style: oaDisplay(30)),
-                  Text(kalanGun == 0 ? 'Ayın son günü' : 'Ay sonuna $kalanGun gün var',
+                  Text(kalanGun == 0 ? L('Ayın son günü') : Lx('Ay sonuna $kalanGun gün var', '$kalanGun days to month end'),
                       style: oaBody(15, color: OA.muted)),
                 ],
               ),
             ),
-            if (disaAktar != null) ...[OAButton('Dışa aktar', onPressed: disaAktar), const SizedBox(width: 10)],
-            OAButton('Yeni kayıt', kind: OAButtonKind.primary, onPressed: () => kayitAc(context)),
+            if (disaAktar != null) ...[OAButton(L('Dışa aktar'), onPressed: disaAktar), const SizedBox(width: 10)],
+            OAButton(L('Yeni kayıt'), kind: OAButtonKind.primary, onPressed: () => kayitAc(context)),
           ],
         ),
         const SizedBox(height: 22),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _Istatistik('Kalan', para(o.kalan, kurussuz: true), renk: o.kalan < 0 ? OA.danger : OA.text)),
+            Expanded(child: _Istatistik(L('Kalan'), para(o.kalan, kurussuz: true), renk: o.kalan < 0 ? OA.danger : OA.text)),
             const SizedBox(width: 14),
-            Expanded(child: _Istatistik('Gelir', para(o.gelir, kurussuz: true), renk: OA.green)),
+            Expanded(child: _Istatistik(L('Gelir'), para(o.gelir, kurussuz: true), renk: OA.green)),
             const SizedBox(width: 14),
-            Expanded(child: _Istatistik('Gider', para(o.gider, kurussuz: true), alt: kiyas)),
+            Expanded(child: _Istatistik(L('Gider'), para(o.gider, kurussuz: true), alt: kiyas)),
             const SizedBox(width: 14),
             Expanded(
-              child: _Istatistik('Günde harcayabileceğin', para(o.gunluk, kurussuz: true),
-                  renk: OA.amber, alt: o.yaklasan > 0 ? 'Yaklaşan ödemeler düşüldü' : null),
+              child: _Istatistik(L('Günde harcayabileceğin'), para(o.gunluk, kurussuz: true),
+                  renk: OA.amber, alt: o.yaklasan > 0 ? L('Yaklaşan ödemeler düşüldü') : null),
             ),
           ],
         ),
@@ -136,10 +137,10 @@ class OzetSayfasi extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Baslik('Son hareketler', eylem: 'Tümünü gör', onEylem: () => git(Sayfa.hareketler)),
+                        Baslik(L('Son hareketler'), eylem: L('Tümünü gör'), onEylem: () => git(Sayfa.hareketler)),
                         if (s.kayitlar.isEmpty)
-                          Bos(Icons.receipt_long_outlined, 'Henüz kayıt yok', 'Gelir ve giderlerin burada listelenir.',
-                              eylem: 'İlk kaydı ekle', onEylem: () => kayitAc(context, tur: Tur.gelir))
+                          Bos(Icons.receipt_long_outlined, L('Henüz kayıt yok'), L('Gelir ve giderlerin burada listelenir.'),
+                              eylem: L('İlk kaydı ekle'), onEylem: () => kayitAc(context, tur: Tur.gelir))
                         else
                           HareketTablosu(s.kayitlar.take(8).toList()),
                       ],
@@ -158,7 +159,7 @@ class OzetSayfasi extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Baslik('Yaklaşan ödemeler', eylem: 'Takvim', onEylem: () => git(Sayfa.takvim)),
+                        Baslik(L('Yaklaşan ödemeler'), eylem: L('Takvim'), onEylem: () => git(Sayfa.takvim)),
                         ..._yaklasanSatirlari(context, s, simdi),
                       ],
                     ),
@@ -168,7 +169,7 @@ class OzetSayfasi extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Baslik('Bütçeler', eylem: 'Düzenle', onEylem: () => git(Sayfa.butceler)),
+                        Baslik(L('Bütçeler'), eylem: L('Düzenle'), onEylem: () => git(Sayfa.butceler)),
                         _ButceListesi(adet: 5, git: git),
                       ],
                     ),
@@ -186,9 +187,9 @@ class OzetSayfasi extends StatelessWidget {
     final y = s.yaklasanlar(simdi).take(5).toList();
     if (y.isEmpty) {
       return [
-        Text('Kredi, kira, abonelik gibi her ay tekrar eden ödemelerini ekle.', style: oaBody(15, color: OA.muted)),
+        Text(L('Kredi, kira, abonelik gibi her ay tekrar eden ödemelerini ekle.'), style: oaBody(15, color: OA.muted)),
         const SizedBox(height: 12),
-        Align(alignment: Alignment.centerLeft, child: OAButton('Düzenli ödeme ekle', onPressed: () => duzenliAc(context))),
+        Align(alignment: Alignment.centerLeft, child: OAButton(L('Düzenli ödeme ekle'), onPressed: () => duzenliAc(context))),
       ];
     }
     return [for (final t in y) TekrarSatiri(t, bugun: simdi)];
@@ -216,7 +217,7 @@ class _KalanKarti extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bu ay kalan', style: oaBody(15, color: OA.text2, weight: FontWeight.w600)),
+          Text(L('Bu ay kalan'), style: oaBody(15, color: OA.text2, weight: FontWeight.w600)),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -224,16 +225,19 @@ class _KalanKarti extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           if (o.gelir == 0 && o.gider == 0)
-            Text('Gelirini ekleyince günde ne kadar harcayabileceğini hesaplarım.',
+            Text(L('Gelirini ekleyince günde ne kadar harcayabileceğini hesaplarım.'),
                 style: oaBody(15, color: OA.amber, weight: FontWeight.w600))
           else if (o.yaklasan > 0 && eksik < 0)
-            Text('Yaklaşan ödemeler bu ayki kalanı ${para(-eksik, kurussuz: true)} aşıyor.',
+            Text(Lx('Yaklaşan ödemeler bu ayki kalanı ${para(-eksik, kurussuz: true)} aşıyor.',
+                    'Upcoming payments exceed what’s left by ${para(-eksik, kurussuz: true)}.'),
                 style: oaBody(15, color: OA.danger))
           else
             Text(
               o.yaklasan > 0
-                  ? 'Yaklaşan ödemeler düşülünce günde ${para(o.gunluk, kurussuz: true)}'
-                  : 'Ay sonuna kadar günde ${para(o.gunluk, kurussuz: true)}',
+                  ? Lx('Yaklaşan ödemeler düşülünce günde ${para(o.gunluk, kurussuz: true)}',
+                      '${para(o.gunluk, kurussuz: true)} a day after upcoming payments')
+                  : Lx('Ay sonuna kadar günde ${para(o.gunluk, kurussuz: true)}',
+                      '${para(o.gunluk, kurussuz: true)} a day until month end'),
               style: oaBody(15, color: OA.amber, weight: FontWeight.w600),
             ),
         ],
@@ -263,10 +267,10 @@ class _Kucuk extends StatelessWidget {
 }
 
 class _Istatistik extends StatelessWidget {
-  const _Istatistik(this.etiket, this.deger, {this.renk = OA.text, this.alt});
+  const _Istatistik(this.etiket, this.deger, {this.renk, this.alt});
   final String etiket;
   final String deger;
-  final Color renk;
+  final Color? renk;
   final String? alt;
 
   @override
@@ -309,14 +313,14 @@ class _SoruKarti extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${d.ad} ödendi mi?', style: oaBody(16, weight: FontWeight.w700)),
+                Text(Lx('${d.ad} ödendi mi?', '${d.ad}: paid yet?'), style: oaBody(16, weight: FontWeight.w700)),
                 Text('${d.degisken ? '~' : ''}${para(d.tutar)} · ${kalanYazi(t.tarih, bugun)}',
                     style: oaBody(14, color: OA.muted)),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          OAButton('Yanıtla', kind: OAButtonKind.primary, onPressed: () => odendiSor(context, t)),
+          OAButton(L('Yanıtla'), kind: OAButtonKind.primary, onPressed: () => odendiSor(context, t)),
         ],
       ),
     );
@@ -338,14 +342,14 @@ class _SiradakiKarti extends StatelessWidget {
       return OACard(
         child: Row(
           children: [
-            const Icon(Icons.event_repeat_outlined, color: OA.amber, size: 30),
+            Icon(Icons.event_repeat_outlined, color: OA.amber, size: 30),
             const SizedBox(width: 14),
             Expanded(
-              child: Text('Kredi, kira, abonelik gibi ödemelerini bir kez ekle; her ay kendiliğinden takvime düşsün.',
+              child: Text(L('Kredi, kira, abonelik gibi ödemelerini bir kez ekle; her ay kendiliğinden takvime düşsün.'),
                   style: oaBody(15, color: OA.text2)),
             ),
             const SizedBox(width: 10),
-            OAButton('Ekle', onPressed: () => duzenliAc(context)),
+            OAButton(L('Ekle'), onPressed: () => duzenliAc(context)),
           ],
         ),
       );
@@ -384,7 +388,8 @@ class _SiradakiKarti extends StatelessWidget {
               const SizedBox(height: 12),
               const Divider(height: 1),
               const SizedBox(height: 10),
-              Text('Bu ay ${digerleri.length} düzenli ödeme daha var · ${para(toplam)}',
+              Text(Lx('Bu ay ${digerleri.length} düzenli ödeme daha var · ${para(toplam)}',
+                  '${digerleri.length} more regular payments this month · ${para(toplam)}'),
                   style: oaBody(14, color: OA.text2)),
             ],
           ],
@@ -412,7 +417,7 @@ class _ButceListesi extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text('Market, eğlence gibi kategorilere aylık sınır koy; aşınca haber vereyim.',
+          child: Text(L('Market, eğlence gibi kategorilere aylık sınır koy; aşınca haber vereyim.'),
               style: oaBody(15, color: OA.muted)),
         ),
       );
@@ -442,7 +447,7 @@ class ButceSatiri extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(child: Text(k.ad, style: oaBody(15, weight: FontWeight.w600))),
               Text(
-                '${para(harcanan, kurussuz: true)} / ${para(sinir, kurussuz: true)}${asim > 0 ? ' · ${para(asim, kurussuz: true)} aştı' : ''}',
+                '${para(harcanan, kurussuz: true)} / ${para(sinir, kurussuz: true)}${asim > 0 ? Lx(' · ${para(asim, kurussuz: true)} aştı', ' · ${para(asim, kurussuz: true)} over') : ''}',
                 style: oaBody(14, color: asim > 0 ? OA.danger : OA.muted),
               ),
             ],
@@ -490,7 +495,7 @@ class TekrarSatiri extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(d.ad, maxLines: 1, overflow: TextOverflow.ellipsis, style: oaBody(16, weight: FontWeight.w600)),
-                  Text('${t.sira}${d.degisken ? ' · tutar değişebilir' : ''}', style: oaBody(14, color: OA.muted)),
+                  Text('${t.sira}${d.degisken ? Lx(' · tutar değişebilir', ' · amount varies') : ''}', style: oaBody(14, color: OA.muted)),
                 ],
               ),
             ),
@@ -518,13 +523,13 @@ class TekrarSatiri extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.undo, color: OA.text2),
-              title: Text(h == TekrarHali.odendi ? '"Ödendi" kararını geri al' : '"Bu ay ödenmeyecek" kararını geri al'),
+              leading: Icon(Icons.undo, color: OA.text2),
+              title: Text(h == TekrarHali.odendi ? L('"Ödendi" kararını geri al') : L('"Bu ay ödenmeyecek" kararını geri al')),
               onTap: () => Navigator.pop(c, 'geri'),
             ),
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: OA.text2),
-              title: const Text('Düzenli ödemeyi düzenle'),
+              leading: Icon(Icons.edit_outlined, color: OA.text2),
+              title: Text(L('Düzenli ödemeyi düzenle')),
               onTap: () => Navigator.pop(c, 'duzenle'),
             ),
           ],
@@ -544,24 +549,24 @@ class HareketTablosu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget hucre(String s, {int flex = 2, TextAlign hiza = TextAlign.left, Color renk = OA.muted, bool kalin = false}) =>
+    Widget hucre(String s, {int flex = 2, TextAlign hiza = TextAlign.left, Color? renk, bool kalin = false}) =>
         Expanded(
           flex: flex,
           child: Text(s,
               textAlign: hiza,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: oaBody(15, color: renk, weight: kalin ? FontWeight.w700 : FontWeight.w400)),
+              style: oaBody(15, color: renk ?? OA.muted, weight: kalin ? FontWeight.w700 : FontWeight.w400)),
         );
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Row(children: [
-            hucre('Açıklama', flex: 3),
-            hucre('Kategori'),
-            hucre('Tarih'),
-            hucre('Tutar', hiza: TextAlign.right),
+            hucre(L('Açıklama'), flex: 3),
+            hucre(L('Kategori')),
+            hucre(L('Tarih')),
+            hucre(L('Tutar'), hiza: TextAlign.right),
           ]),
         ),
         const Divider(height: 1),
@@ -572,7 +577,7 @@ class HareketTablosu extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
               child: Row(children: [
                 hucre(k.aciklama.isNotEmpty ? k.aciklama : kategori(k.kategori).ad, flex: 3, renk: OA.text, kalin: true),
-                hucre(k.tur == Tur.gelir ? 'Gelir' : kategori(k.kategori).ad),
+                hucre(k.tur == Tur.gelir ? L('Gelir') : kategori(k.kategori).ad),
                 hucre(tarihYazi(k.tarih)),
                 hucre(para(k.isaretli, isaret: true),
                     hiza: TextAlign.right, renk: k.tur == Tur.gelir ? OA.green : OA.text, kalin: true),

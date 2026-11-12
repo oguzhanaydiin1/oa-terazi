@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import '../models.dart';
 import '../store.dart';
 import '../theme.dart';
@@ -40,14 +41,14 @@ class _TakvimSayfasiState extends State<TakvimSayfasi> {
                     const SizedBox(width: 8),
                     Expanded(child: Text(ayAdi(ay), style: oaDisplay(18))),
                     IconButton(
-                      tooltip: 'Önceki ay',
+                      tooltip: L('Önceki ay'),
                       onPressed: () => setState(() => ay = ayEkle(ay, -1)),
-                      icon: const Icon(Icons.chevron_left, color: OA.text2),
+                      icon: Icon(Icons.chevron_left, color: OA.text2),
                     ),
                     IconButton(
-                      tooltip: 'Sonraki ay',
+                      tooltip: L('Sonraki ay'),
                       onPressed: () => setState(() => ay = ayEkle(ay, 1)),
-                      icon: const Icon(Icons.chevron_right, color: OA.text2),
+                      icon: Icon(Icons.chevron_right, color: OA.text2),
                     ),
                   ],
                 ),
@@ -60,12 +61,12 @@ class _TakvimSayfasiState extends State<TakvimSayfasi> {
           final gunListesi = Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(ayniGun(secili, simdi) ? 'Bugün, ${tarihYazi(secili)}' : tarihYazi(secili), style: oaDisplay(18)),
+              Text(ayniGun(secili, simdi) ? Lx('Bugün, ${tarihYazi(secili)}', 'Today, ${tarihYazi(secili)}') : tarihYazi(secili), style: oaDisplay(18)),
               const SizedBox(height: 6),
               if (gunun.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Text('Bu güne düzenli ödeme yok.', style: oaBody(15, color: OA.muted)),
+                  child: Text(L('Bu güne düzenli ödeme yok.'), style: oaBody(15, color: OA.muted)),
                 )
               else
                 for (final t in gunun) TekrarSatiri(t, bugun: simdi),
@@ -77,15 +78,15 @@ class _TakvimSayfasiState extends State<TakvimSayfasi> {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text('Bu ay kalan düzenli ödemeler', style: oaBody(15, color: OA.text2, weight: FontWeight.w600))),
+                  Expanded(child: Text(L('Bu ay kalan düzenli ödemeler'), style: oaBody(15, color: OA.text2, weight: FontWeight.w600))),
                   Text(para(kalan), style: oaDisplay(18, color: OA.amber)),
                 ],
               ),
               const SizedBox(height: 6),
               if (tekrarlar.isEmpty)
-                Bos(Icons.event_repeat_outlined, 'Düzenli ödeme yok',
-                    'Kredi taksiti, kira, internet, abonelik… Bir kez ekle; kaç ay süreceğini seç, her ay kendiliğinden gelsin.',
-                    eylem: 'Düzenli ödeme ekle', onEylem: () => duzenliAc(context))
+                Bos(Icons.event_repeat_outlined, L('Düzenli ödeme yok'),
+                    L('Kredi taksiti, kira, internet, abonelik… Bir kez ekle; kaç ay süreceğini seç, her ay kendiliğinden gelsin.'),
+                    eylem: L('Düzenli ödeme ekle'), onEylem: () => duzenliAc(context))
               else
                 for (final t in tekrarlar) TekrarSatiri(t, bugun: simdi),
             ],
@@ -93,8 +94,8 @@ class _TakvimSayfasiState extends State<TakvimSayfasi> {
 
           final baslik = Row(
             children: [
-              Expanded(child: Text('Ödeme takvimi', style: oaDisplay(widget.genis ? 30 : 24))),
-              OAButton('Düzenli ödeme', onPressed: () => duzenliAc(context)),
+              Expanded(child: Text(L('Ödeme takvimi'), style: oaDisplay(widget.genis ? 30 : 24))),
+              OAButton(L('Düzenli ödeme'), onPressed: () => duzenliAc(context)),
             ],
           );
 
@@ -131,7 +132,7 @@ class _TakvimSayfasiState extends State<TakvimSayfasi> {
               const SizedBox(height: 10),
               ayListesi,
               const SizedBox(height: 8),
-              Text('İpucu: bir ödemeye basılı tutarak düzenleyebilirsin.', style: oaBody(13, color: OA.faint)),
+              Text(L('İpucu: bir ödemeye basılı tutarak düzenleyebilirsin.'), style: oaBody(13, color: OA.faint)),
             ],
           );
         },
