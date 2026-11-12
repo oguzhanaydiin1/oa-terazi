@@ -9,7 +9,7 @@ log="ozet-$label.log"
 code=${PIPESTATUS[0]}
 if [[ $code -ne 0 || "$label" == "analiz" || "$label" == "surumler" ]]; then
   # Hata içeren satırlar ve hemen çevreleri; en fazla 120 satır
-  lines=$( { grep -n -A12 "What went wrong" "$log"; \
+  lines=$( { grep -n -E " error - | error • " "$log" | head -60; grep -n -A12 "What went wrong" "$log"; \
              grep -n -E -B2 -A2 "error [A-Z]+[0-9]+|: error|Error:|error:|\.dart:[0-9]+:[0-9]+|Exception|CMake Error|FAILED" "$log"; \
              echo "---- son satirlar ----"; tail -n 40 "$log" | sed 's/^/T: /'; } \
           | grep -viE "nuget\.org|  GET https|  OK https|Node\.js 20" | awk '!seen[$0]++' | head -200 | cut -c1-260)
