@@ -1,0 +1,90 @@
+# Açılış denemesi: Derle bitince son sürümü Android emülatöründe ve Windows'ta açar,
+# çökme olursa hata olarak yazar ve ekran görüntülerini "deneme" dalına koyar. Sürüm yayınlamaz.
+name: Açılış denemesi
+on:
+  workflow_run:
+    workflows: [Derle]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: deneme
+  cancel-in-progress: true
+jobs:
+  android:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: APK indir
+        run: curl -sSL -o terazi.apk https://github.com/${{ github.repository }}/releases/latest/download/Terazi-Android.apk && ls -l terazi.apk
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            adb install -r terazi.apk
+            adb shell pm grant dev.oalabs.terazi android.permission.POST_NOTIFICATIONS || true
+            adb logcat -c
+            adb shell monkey -p dev.oalabs.terazi -c android.intent.category.LAUNCHER 1
+            sleep 25
+            adb exec-out screencap -p > android-ozet.png
+            if adb shell pidof dev.oalabs.terazi; then echo "acik=1" >> "$GITHUB_ENV"; else echo "acik=0" >> "$GITHUB_ENV"; fi
+            adb logcat -d -b crash > cokme.txt || true
+            adb logcat -d '*:E' | grep -iE "flutter|terazi|AndroidRuntime|dexterous" | tail -80 > hatalar.txt || true
+      - name: Sonuç
+        run: |
+          msg=$( { echo "acik=$acik"; echo "--- cokme"; head -60 cokme.txt; echo "--- hatalar"; tail -60 hatalar.txt; } | cut -c1-240 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')
+          if [ "$acik" = "1" ] && [ ! -s cokme.txt ]; then echo "::notice title=android::$msg"; else echo "::error title=android::$msg"; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-ekran
+          path: android-ozet.png
+
+  windows:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: İndir ve aç
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://github.com/${{ github.repository }}/releases/latest/download/Terazi-Windows.zip -OutFile t.zip
+          Expand-Archive t.zip -DestinationPath app
+          $p = Start-Process -FilePath app\terazi.exe -PassThru
+          Start-Sleep -Seconds 20
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("windows-ozet.png")
+          if ($p.HasExited) { Write-Output "::error title=windows::Uygulama kapandı (çıkış kodu $($p.ExitCode))" } else { Write-Output "::notice title=windows::Uygulama açık" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-ekran
+          path: windows-ozet.png
+
+  ekran:
+    needs: [android, windows]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: e
+      - name: Ekran görüntülerini "deneme" dalına koy
+        run: |
+          mkdir out && find e -name '*.png' -exec cp {} out/ \;
+          cd out && git init -q -b deneme && git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add . && git commit -qm "Açılış denemesi ekran görüntüleri" || exit 0
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" deneme
