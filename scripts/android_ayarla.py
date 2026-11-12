@@ -17,6 +17,7 @@ import sys
 MANIFEST = 'android/app/src/main/AndroidManifest.xml'
 
 PERMS = [
+    'android.permission.INTERNET',  # yazı tipleri (Google Fonts)
     'android.permission.POST_NOTIFICATIONS',
     'android.permission.RECEIVE_BOOT_COMPLETED',
     'android.permission.VIBRATE',

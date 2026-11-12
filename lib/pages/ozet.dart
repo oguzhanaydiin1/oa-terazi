@@ -223,7 +223,10 @@ class _KalanKarti extends StatelessWidget {
             child: Text(para(o.kalan, kurussuz: true), style: oaDisplay(46, color: o.kalan < 0 ? OA.danger : OA.text)),
           ),
           const SizedBox(height: 6),
-          if (o.yaklasan > 0 && eksik < 0)
+          if (o.gelir == 0 && o.gider == 0)
+            Text('Gelirini ekleyince günde ne kadar harcayabileceğini hesaplarım.',
+                style: oaBody(15, color: OA.amber, weight: FontWeight.w600))
+          else if (o.yaklasan > 0 && eksik < 0)
             Text('Yaklaşan ödemeler bu ayki kalanı ${para(-eksik, kurussuz: true)} aşıyor.',
                 style: oaBody(15, color: OA.danger))
           else

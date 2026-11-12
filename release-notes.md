@@ -1,3 +1,6 @@
+## 0.1.1
+- Android'de yazı tipleri yüklenmiyordu, düzeltildi.
+
 ## 0.1.0
 - İlk sürüm: gelir ve gider kaydı, bu ay kalan ve günde harcanabilecek tutar.
 - Ödeme takvimi: kredi, kira, abonelik gibi düzenli ödemeleri bir kez ekle, kaç ay süreceğini seç; her ay kendiliğinden gelir.
