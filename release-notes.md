@@ -1,3 +1,6 @@
+## 0.2.1
+- İngilizcede alt menüdeki "Documents" yazısı sığmıyordu, "Docs" oldu.
+
 ## 0.2.0
 - Belgeler: fatura, sigorta poliçesi, garanti belgesi ve sözleşmelerini sakla. Telefonda kamerayla tara ya da PDF/fotoğraf seç.
 - Belgeler yalnızca bu cihazda, şifreli durur; hiçbir sunucuya gönderilmez. Kimlik ve banka kartı için değil.
