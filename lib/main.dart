@@ -7,9 +7,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'i18n.dart';
+import 'belge.dart';
 import 'bildirim.dart';
 import 'models.dart';
 import 'pages/ayarlar.dart';
+import 'pages/belgeler.dart';
 import 'pages/ekle.dart';
 import 'pages/hareketler.dart';
 import 'pages/odendi.dart';
@@ -25,6 +27,7 @@ final gezgin = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Store.ac();
+  Kasa.geciciTemizle();
   await Bildirim.baslat();
   Store.i.degisince = Bildirim.yenidenPlanla;
   Bildirim.dokunulunca = bildirimIsle;
@@ -140,7 +143,7 @@ class _KabukState extends State<Kabuk> {
   set sayfa(Sayfa s) => _son = s;
   late final AppLifecycleListener _dongu;
 
-  static const _alt = [Sayfa.ozet, Sayfa.hareketler, Sayfa.takvim, Sayfa.raporlar, Sayfa.ayarlar];
+  static const _alt = [Sayfa.ozet, Sayfa.hareketler, Sayfa.takvim, Sayfa.belgeler, Sayfa.raporlar];
 
   @override
   void initState() {
@@ -204,6 +207,7 @@ class _KabukState extends State<Kabuk> {
       Sayfa.hareketler => HareketlerSayfasi(genis: genis),
       Sayfa.butceler => ButcelerSayfasi(genis: genis),
       Sayfa.takvim => TakvimSayfasi(genis: genis),
+      Sayfa.belgeler => BelgelerSayfasi(genis: genis),
       Sayfa.raporlar => RaporlarSayfasi(genis: genis),
       Sayfa.ayarlar => AyarlarSayfasi(genis: genis, git: g, disaAktar: aktar),
     };
@@ -231,15 +235,33 @@ class _KabukState extends State<Kabuk> {
         ),
       );
     }
+    // Telefonda Ayarlar alt menüde değil; Özet'teki dişliden açılır, geri tuşuyla Özet'e dönülür.
+    if (sayfa == Sayfa.ayarlar) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) setState(() => sayfa = Sayfa.ozet);
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: OA.bg,
+            leading: BackButton(onPressed: () => setState(() => sayfa = Sayfa.ozet)),
+          ),
+          body: SafeArea(top: false, child: govde(false)),
+        ),
+      );
+    }
     final i = _alt.indexOf(sayfa);
+    final belgeler = sayfa == Sayfa.belgeler;
     return Scaffold(
       body: SafeArea(bottom: false, child: govde(false)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => kayitAc(context),
+        onPressed: () => belgeler ? belgeEkle(context) : kayitAc(context),
         backgroundColor: OA.amber,
         foregroundColor: OA.amberInk,
         icon: const Icon(Icons.add),
-        label: Text(L('Ekle'), style: oaBody(16, color: OA.amberInk, weight: FontWeight.w700)),
+        label: Text(belgeler ? Lx('Belge ekle', 'Add document') : L('Ekle'),
+            style: oaBody(16, color: OA.amberInk, weight: FontWeight.w700)),
       ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: OA.bg2,
@@ -251,8 +273,8 @@ class _KabukState extends State<Kabuk> {
           NavigationDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: L('Özet')),
           NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: L('Hareketler')),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: L('Takvim')),
+          NavigationDestination(icon: const Icon(Icons.description_outlined), selectedIcon: const Icon(Icons.description), label: Lx('Belgeler', 'Documents')),
           NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: L('Raporlar')),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: L('Ayarlar')),
         ],
       ),
     );
@@ -269,6 +291,7 @@ class _KenarCubugu extends StatelessWidget {
     (Sayfa.hareketler, Icons.receipt_long_outlined, L('Hareketler')),
     (Sayfa.butceler, Icons.pie_chart_outline, L('Bütçeler')),
     (Sayfa.takvim, Icons.calendar_month_outlined, L('Ödeme takvimi')),
+    (Sayfa.belgeler, Icons.description_outlined, Lx('Belgeler', 'Documents')),
     (Sayfa.raporlar, Icons.bar_chart_outlined, L('Raporlar')),
     (Sayfa.ayarlar, Icons.settings_outlined, L('Ayarlar')),
   ];

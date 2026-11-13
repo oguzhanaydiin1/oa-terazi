@@ -8,8 +8,10 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'duzenli.dart';
 import 'ekle.dart';
+import 'belgeler.dart';
 import 'odendi.dart';
 import 'sayfalar.dart';
+import 'yedek.dart';
 
 class OzetSayfasi extends StatelessWidget {
   const OzetSayfasi({super.key, required this.git, required this.genis, this.disaAktar});
@@ -41,6 +43,12 @@ class OzetSayfasi extends StatelessWidget {
             Text('Terazi', style: oaDisplay(22)),
             const Spacer(),
             Text(ayAdi(simdi), style: oaBody(15, color: OA.muted, weight: FontWeight.w600)),
+            const SizedBox(width: 4),
+            IconButton(
+              tooltip: L('Ayarlar'),
+              onPressed: () => git(Sayfa.ayarlar),
+              icon: Icon(Icons.settings_outlined, color: OA.text2),
+            ),
           ],
         ),
         const SizedBox(height: 18),
@@ -54,6 +62,8 @@ class OzetSayfasi extends StatelessWidget {
           ],
         ),
         for (final t in sor) ...[const SizedBox(height: 12), _SoruKarti(t)],
+        for (final b in s.yaklasanBelgeler(simdi).take(2)) ...[const SizedBox(height: 12), BitisKarti(b)],
+        if (s.yedekZamani(simdi)) ...[const SizedBox(height: 12), const YedekHatirlatKarti()],
         const SizedBox(height: 12),
         _SiradakiKarti(o, git: git),
         if (bos) ...[
@@ -133,6 +143,8 @@ class OzetSayfasi extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   for (final t in sor) ...[_SoruKarti(t), const SizedBox(height: 12)],
+                  for (final b in s.yaklasanBelgeler(simdi).take(3)) ...[BitisKarti(b), const SizedBox(height: 12)],
+                  if (s.yedekZamani(simdi)) ...[const YedekHatirlatKarti(), const SizedBox(height: 12)],
                   OACard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

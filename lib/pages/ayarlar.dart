@@ -10,6 +10,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'ozet.dart';
 import 'sayfalar.dart';
+import 'yedek.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
 
@@ -50,6 +51,11 @@ class AyarlarSayfasi extends StatelessWidget {
                           satir(Icons.pie_chart_outline, L('Bütçeler'),
                               s.butceler.isEmpty ? L('Kategorilere aylık sınır koy') : Lx('${s.butceler.length} kategori için sınır var', 'Limits set for ${s.butceler.length} categories'),
                               onTap: () => git(Sayfa.butceler)),
+                        satir(Icons.backup_outlined, Lx('Yedek ve aktarım', 'Backup and transfer'),
+                            s.sonYedek == null
+                                ? Lx('Henüz yedek alınmadı', 'No backup yet')
+                                : Lx('Son yedek ${tarihYazi(s.sonYedek!)}', 'Last backup ${tarihYazi(s.sonYedek!)}'),
+                            onTap: () => yedekAc(context)),
                         if (Bildirim.destekli)
                           satir(
                             Icons.notifications_outlined,

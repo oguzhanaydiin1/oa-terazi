@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'belge.dart';
 import 'i18n.dart';
 import 'kategoriler.dart';
 import 'models.dart';
@@ -18,6 +19,9 @@ class Store extends ChangeNotifier {
   final List<Kayit> kayitlar = [];
   final List<Duzenli> duzenliler = [];
   final Map<String, int> butceler = {}; // kategori → aylık sınır (kuruş)
+  final List<Belge> belgeler = [];
+  DateTime? sonYedek;
+  bool yedekHatirlat = true;
   bool bildirim = true;
   String dil = 'sistem'; // sistem, tr, en
   String tema = 'sistem'; // sistem, koyu, acik
@@ -51,7 +55,18 @@ class Store extends ChangeNotifier {
     final f = _dosya;
     if (f == null || !await f.exists()) return;
     try {
-      final j = jsonDecode(await f.readAsString()) as Map<String, dynamic>;
+      _yukle(jsonDecode(await f.readAsString()) as Map<String, dynamic>);
+    } catch (e) {
+      // Bozuk dosyayı silmek yerine kenara al; kullanıcı verisi kaybolmasın.
+      debugPrint('terazi.json okunamadı: $e');
+      try {
+        await f.copy('${f.path}.bozuk-${DateTime.now().millisecondsSinceEpoch}');
+      } catch (_) {}
+    }
+  }
+
+  void _yukle(Map<String, dynamic> j) {
+    {
       kayitlar
         ..clear()
         ..addAll(((j['kayitlar'] as List?) ?? []).map((e) => Kayit.fromJson(Map<String, dynamic>.from(e as Map))));
@@ -62,17 +77,16 @@ class Store extends ChangeNotifier {
         ..clear()
         ..addAll(((j['butceler'] as Map?) ?? {}).map((k, v) => MapEntry(k as String, (v as num).toInt())));
       bildirim = j['bildirim'] != false;
+      belgeler
+        ..clear()
+        ..addAll(((j['belgeler'] as List?) ?? []).map((e) => Belge.fromJson(Map<String, dynamic>.from(e as Map))));
+      sonYedek = j['sonYedek'] == null ? null : DateTime.tryParse(j['sonYedek'] as String);
+      yedekHatirlat = j['yedekHatirlat'] != false;
       dil = (j['dil'] as String?) ?? 'sistem';
       tema = (j['tema'] as String?) ?? 'sistem';
       paraBirimi = (j['paraBirimi'] as String?) ?? 'TRY';
-      _sirala();
-    } catch (e) {
-      // Bozuk dosyayı silmek yerine kenara al; kullanıcı verisi kaybolmasın.
-      debugPrint('terazi.json okunamadı: $e');
-      try {
-        await f.copy('${f.path}.bozuk-${DateTime.now().millisecondsSinceEpoch}');
-      } catch (_) {}
     }
+    _sirala();
   }
 
   Map<String, dynamic> toJson() => {
@@ -81,6 +95,9 @@ class Store extends ChangeNotifier {
         'duzenliler': duzenliler.map((d) => d.toJson()).toList(),
         'butceler': butceler,
         'bildirim': bildirim,
+        'belgeler': belgeler.map((b) => b.toJson()).toList(),
+        if (sonYedek != null) 'sonYedek': sonYedek!.toIso8601String(),
+        'yedekHatirlat': yedekHatirlat,
         'dil': dil,
         'tema': tema,
         'paraBirimi': paraBirimi,
@@ -259,9 +276,103 @@ class Store extends ChangeNotifier {
   }
 
   void hepsiniSil() {
+    for (final b in belgeler) {
+      for (final d in b.dosyalar) {
+        Kasa.sil(d.id);
+      }
+    }
     kayitlar.clear();
     duzenliler.clear();
     butceler.clear();
+    belgeler.clear();
+    _degisti();
+  }
+
+  // ---- Belgeler (yalnızca bu cihazda) ----
+
+  Belge? belge(String id) {
+    for (final b in belgeler) {
+      if (b.id == id) return b;
+    }
+    return null;
+  }
+
+  void belgeKaydet(Belge b) {
+    final i = belgeler.indexWhere((e) => e.id == b.id);
+    if (i >= 0) {
+      belgeler[i] = b;
+    } else {
+      belgeler.add(b);
+    }
+    _degisti();
+  }
+
+  Future<void> belgeSil(String id) async {
+    final b = belge(id);
+    if (b == null) return;
+    belgeler.remove(b);
+    _degisti();
+    for (final d in b.dosyalar) {
+      await Kasa.sil(d.id);
+    }
+  }
+
+  /// Bitişi yaklaşan ya da geçen belgeler (en yakın önce).
+  List<Belge> yaklasanBelgeler([DateTime? simdi]) {
+    final bugun = gunBasi(simdi ?? DateTime.now());
+    final l = belgeler.where((b) => b.yaklasti(bugun)).toList()..sort((a, b) => a.bitis!.compareTo(b.bitis!));
+    return l;
+  }
+
+  /// Yedek alma zamanı geldi mi? (hiç alınmadıysa ve en az bir belge varsa ya da son yedek 30 günden eskiyse)
+  bool yedekZamani([DateTime? simdi]) {
+    if (!yedekHatirlat || (belgeler.isEmpty && kayitlar.length < 20)) return false;
+    final s = sonYedek;
+    return s == null || (simdi ?? DateTime.now()).difference(s).inDays >= 30;
+  }
+
+  void yedekAlindi() {
+    sonYedek = DateTime.now();
+    _degisti();
+  }
+
+  void yedekHatirlatAyarla(bool v) {
+    yedekHatirlat = v;
+    _degisti();
+  }
+
+  /// Yedek için: veri ve bütün belge dosyalarının şifresiz hâli.
+  Future<Map<String, List<int>>> belgeDosyalari() async {
+    final out = <String, List<int>>{};
+    for (final b in belgeler) {
+      for (final d in b.dosyalar) {
+        try {
+          out[d.id] = await Kasa.oku(d.id);
+        } catch (e) {
+          debugPrint('Belge okunamadı ${d.id}: $e');
+        }
+      }
+    }
+    return out;
+  }
+
+  /// Yedekten geri yükler: bu cihazdaki her şeyin yerine yedektekiler gelir.
+  Future<void> geriYukle(Map<String, dynamic> veri, Map<String, List<int>> dosyalar) async {
+    final eskiler = [for (final b in belgeler) ...b.dosyalar.map((d) => d.id)];
+    // Ayarlar (dil, tema, para birimi) bu cihazda kalsın.
+    final ayar = (dil: dil, tema: tema, para: paraBirimi);
+    _yukle(veri);
+    dil = ayar.dil;
+    tema = ayar.tema;
+    paraBirimi = ayar.para;
+    for (final e in dosyalar.entries) {
+      final f = File('${(await Kasa.klasor()).path}${Platform.pathSeparator}${e.key}.bin');
+      await f.writeAsBytes(await sifrele(e.value, await Kasa.anahtar()), flush: true);
+    }
+    final yeniler = {for (final b in belgeler) ...b.dosyalar.map((d) => d.id)};
+    for (final id in eskiler) {
+      if (!yeniler.contains(id)) await Kasa.sil(id);
+    }
     _degisti();
   }
 

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../belge.dart';
 import '../i18n.dart';
 import '../kategoriler.dart';
 import '../models.dart';
 import '../store.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'belgeler.dart';
 
 /// Düzenli ödemenin günü gelince: "Ödendi mi?"
 Future<void> odendiSor(BuildContext context, Tekrar t) async {
@@ -43,6 +45,9 @@ class _OdendiSayfasiState extends State<OdendiSayfasi> {
 
   static String _yaz(int k) => paraYaz(k);
 
+  /// İsteğe bağlı: ödemenin faturası (Belgeler'e de eklenir).
+  final fatura = <SecilenDosya>[];
+
   @override
   void dispose() {
     tutar.dispose();
@@ -55,7 +60,8 @@ class _OdendiSayfasiState extends State<OdendiSayfasi> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L('Ödenen tutarı yaz.'))));
       return;
     }
-    Store.i.odendi(widget.t, v);
+    final kayitId = Store.i.odendi(widget.t, v);
+    if (fatura.isNotEmpty) faturayiKaydet(widget.t, kayitId, List.of(fatura));
     Navigator.pop(context, Lx('${widget.t.duzenli.ad} gider olarak kaydedildi · ${para(v)}', '${widget.t.duzenli.ad} recorded as spending · ${para(v)}'));
   }
 
@@ -105,6 +111,28 @@ class _OdendiSayfasiState extends State<OdendiSayfasi> {
                 : L('Farklıysa düzelt; bu ay için kaydedilir, sonraki aylar değişmez.'),
             style: oaBody(14, color: OA.muted),
           ),
+          const SizedBox(height: 16),
+          Text(Lx('Fatura (isteğe bağlı)', 'Bill (optional)'), style: oaBody(14, color: OA.muted, weight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          if (fatura.isEmpty)
+            DosyaKaynaklari(eklendi: (l) => setState(() => fatura.addAll(l)))
+          else
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final f in fatura)
+                Chip(
+                  avatar: Icon(Icons.receipt_long_outlined, size: 18, color: OA.amber),
+                  label: Text(f.ad, overflow: TextOverflow.ellipsis),
+                  backgroundColor: OA.surface,
+                  side: BorderSide(color: OA.amber),
+                  labelStyle: oaBody(13),
+                  onDeleted: () => setState(() => fatura.remove(f)),
+                ),
+            ]),
+          if (fatura.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(Lx('Belgeler’e de eklenecek; yalnızca bu cihazda, şifreli.', 'It’ll also be added to Documents; on this device only, encrypted.'),
+                style: oaBody(13, color: OA.muted)),
+          ],
           const SizedBox(height: 20),
           OAButton(L('Ödendi, gider olarak kaydet'), kind: OAButtonKind.primary, big: true, onPressed: odendi),
           const SizedBox(height: 10),
@@ -129,4 +157,18 @@ class _OdendiSayfasiState extends State<OdendiSayfasi> {
       ),
     );
   }
+}
+
+/// Ödenen faturayı şifreleyip Belgeler'e "Fatura" olarak ekler.
+Future<void> faturayiKaydet(Tekrar t, String kayitId, List<SecilenDosya> l) async {
+  final d = t.duzenli;
+  Store.i.belgeKaydet(Belge(
+    id: yeniId(),
+    ad: '${d.ad}, ${aylar[t.tarih.month - 1]} ${t.tarih.year}',
+    tur: 'fatura',
+    eklenme: DateTime.now(),
+    dosyalar: await dosyalariKaydet(l),
+    duzenliId: d.id,
+    kayitId: kayitId,
+  ));
 }

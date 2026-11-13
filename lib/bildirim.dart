@@ -107,6 +107,24 @@ class Bildirim {
           }
         }
       }
+      // Belgeler: bitişten [hatirlat] gün önce ve bitiş günü, sabah 9'da.
+      for (final b in s.belgeler) {
+        final bitis = b.bitis;
+        if (bitis == null) continue;
+        final once = DateTime(bitis.year, bitis.month, bitis.day - b.hatirlat, 9);
+        final gun = DateTime(bitis.year, bitis.month, bitis.day, 9);
+        if (once.isAfter(simdi)) {
+          await _kur(id++, once, Lx('${b.ad} ${b.hatirlat} gün sonra bitiyor', '${b.ad} ends in ${b.hatirlat} days'),
+              Lx('Bitiş ${tarihYazi(bitis)}. Yenilemeyi unutma.', 'Ends ${tarihYazi(bitis)}. Don’t forget to renew.'), '',
+              eylemli: false);
+        }
+        if (gun.isAfter(simdi)) {
+          await _kur(id++, gun, Lx('${b.ad} bugün bitiyor', '${b.ad} ends today'),
+              Lx('Yenilediysen yeni belgeyi Terazi’ye ekle.', 'If you renewed it, add the new document to Terazi.'), '',
+              eylemli: false);
+        }
+        if (id > 400) break; // Android'in bekleyen alarm sınırının altında kal
+      }
     } catch (e) {
       debugPrint('Bildirimler planlanamadı: $e');
     }

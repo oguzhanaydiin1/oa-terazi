@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:terazi/belge.dart';
 import 'package:terazi/i18n.dart';
 import 'package:terazi/models.dart';
 import 'package:terazi/store.dart';
@@ -173,5 +174,34 @@ void main() {
     expect(ingSira(1), '1st');
     expect(ingSira(12), '12th');
     expect(ingSira(22), '22nd');
+  });
+
+  test('belge: bitiş ve JSON', () {
+    final b = Belge(id: 'b', ad: 'Kasko', tur: 'sigorta', eklenme: DateTime(2026, 11, 1), bitis: DateTime(2026, 11, 28), hatirlat: 15,
+        dosyalar: [BelgeDosyasi(id: 'd1', ad: 'police.PDF', boyut: 1000)]);
+    expect(b.kalanGun(DateTime(2026, 11, 13)), 15);
+    expect(b.yaklasti(DateTime(2026, 11, 13)), isTrue);
+    expect(b.yaklasti(DateTime(2026, 11, 12)), isFalse);
+    expect(b.dosyalar.first.pdf, isTrue);
+    final j = Belge.fromJson(b.toJson());
+    expect(j.bitis, DateTime(2026, 11, 28));
+    expect(j.dosyalar.single.boyut, 1000);
+    expect(belgeTurleri.any((t) => t.id == 'kimlik'), isFalse);
+  });
+
+  test('şifreleme gidiş dönüş', () async {
+    final k = List<int>.generate(32, (i) => i);
+    final veri = List<int>.generate(1000, (i) => i % 251);
+    final s = await testSifrele(veri, k);
+    expect(s.length, veri.length + 12 + 16);
+    expect(await testCoz(s, k), veri);
+  });
+
+  test('yedek: doğru parola açar, yanlışı reddeder', () async {
+    final paket = await Yedek.paketle({'kayitlar': [], 'surum': 1}, {'d1': [1, 2, 3]}, 'gizli-parola');
+    final y = await Yedek.ac(paket, 'gizli-parola');
+    expect(y.dosyalar['d1'], [1, 2, 3]);
+    expect(() => Yedek.ac(paket, 'yanlis-parola'), throwsA(isA<YedekHatasi>()));
+    expect(() => Yedek.ac([1, 2, 3], 'x'), throwsA(isA<YedekHatasi>()));
   });
 }

@@ -1,3 +1,11 @@
+## 0.2.0
+- Belgeler: fatura, sigorta poliçesi, garanti belgesi ve sözleşmelerini sakla. Telefonda kamerayla tara ya da PDF/fotoğraf seç.
+- Belgeler yalnızca bu cihazda, şifreli durur; hiçbir sunucuya gönderilmez. Kimlik ve banka kartı için değil.
+- Bitiş tarihi olan belgeleri 30, 15 ya da 7 gün önceden hatırlatır.
+- "Ödendi mi?" ekranında ödemenin faturasını da ekleyebilirsin.
+- Parolalı şifreli yedek: kayıtlar ve belgeler tek dosyada; geri yükleme ve ayda bir hatırlatma.
+- Telefonda alt menü: Özet, Hareketler, Takvim, Belgeler, Raporlar. Ayarlar Özet'in sağ üstünde.
+
 ## 0.1.2
 - İngilizce: uygulama cihazın diline göre açılır; Ayarlar’dan Türkçe ya da English seçilebilir.
 - Açık tema: Ayarlar’dan Koyu, Açık ya da Sistem gibi.
