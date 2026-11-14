@@ -1,3 +1,6 @@
+## 0.2.2
+- Ayarlar'a "Uygulama hakkında" bölümü eklendi: sürüm, sistem ve altyapı bilgisi.
+
 ## 0.2.1
 - İngilizcede alt menüdeki "Documents" yazısı sığmıyordu, "Docs" oldu.
 

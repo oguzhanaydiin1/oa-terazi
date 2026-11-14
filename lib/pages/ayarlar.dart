@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -13,6 +15,62 @@ import 'sayfalar.dart';
 import 'yedek.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
+const _oaRozet = 'assets/icon/oalabs_rozet.png';
+
+/// "Windows 10.0", "Android" gibi kısa sistem bilgisi.
+String _sistemYazi() {
+  final ad = Platform.isAndroid ? 'Android' : Platform.isWindows ? 'Windows' : Platform.operatingSystem;
+  final surum = RegExp(r'(\d+(\.\d+)+)').firstMatch(Platform.operatingSystemVersion)?.group(1);
+  final mimari = RegExp(r'_(\w+)"').firstMatch(Platform.version)?.group(1);
+  return [ad, if (surum != null) surum, if (mimari != null) '($mimari)'].join(' ');
+}
+
+/// Dart sürümü, örn. "3.5.4".
+String _dartSurumu() => RegExp(r'^(\S+)').firstMatch(Platform.version)?.group(1) ?? '';
+
+Widget _bilgiSatiri(String etiket, String deger) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(children: [
+        SizedBox(width: 92, child: Text(etiket, style: oaBody(14, color: OA.muted))),
+        Expanded(child: Text(deger, style: oaBody(14, weight: FontWeight.w600, color: OA.text))),
+      ]),
+    );
+
+class _UygulamaHakkinda extends StatelessWidget {
+  const _UygulamaHakkinda();
+
+  @override
+  Widget build(BuildContext context) => OACard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Image.asset(_oaRozet, width: 72, height: 72),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(L('Uygulama hakkında'), style: oaBody(16, weight: FontWeight.w700)),
+                    Text(L('OA Labs atölyesinde özenle yapıldı.'), style: oaBody(14, color: OA.muted)),
+                  ],
+                ),
+              ),
+            ]),
+            const SizedBox(height: 14),
+            Divider(height: 1, color: OA.line),
+            _bilgiSatiri(L('Sürüm'), appVersion),
+            Divider(height: 1, color: OA.line),
+            _bilgiSatiri(L('Sistem'), _sistemYazi()),
+            Divider(height: 1, color: OA.line),
+            _bilgiSatiri(L('Altyapı'), 'Flutter · Dart ${_dartSurumu()}'),
+            Divider(height: 1, color: OA.line),
+            const SizedBox(height: 12),
+            Text('© ${DateTime.now().year} Oğuzhan Aydın', style: oaBody(14, color: OA.muted)),
+          ],
+        ),
+      );
+}
 
 class AyarlarSayfasi extends StatelessWidget {
   const AyarlarSayfasi({super.key, required this.genis, required this.git, this.disaAktar});
@@ -89,21 +147,9 @@ class AyarlarSayfasi extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      const TeraziMark(size: 40),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(L('Terazi: Gelir Gider Takibi'), style: oaBody(15, weight: FontWeight.w700)),
-                          Text(Lx('Sürüm $appVersion · OA Labs', 'Version $appVersion · OA Labs'), style: oaBody(14, color: OA.muted)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
+                  const _UygulamaHakkinda(),
+                  const SizedBox(height: 14),
                   Text(L('Verilerin yalnızca bu cihazda saklanır.'), style: oaBody(14, color: OA.faint)),
                 ],
               ),
