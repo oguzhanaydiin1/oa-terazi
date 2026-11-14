@@ -1,3 +1,7 @@
+## 0.2.3
+
+- "Uygulama hakkında" bölümü İngilizcede de çeviriyle görünüyor
+
 ## 0.2.2
 - Ayarlar'a "Uygulama hakkında" bölümü eklendi: sürüm, sistem ve altyapı bilgisi.
 
