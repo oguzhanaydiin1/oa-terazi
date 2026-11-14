@@ -129,6 +129,46 @@ class Store extends ChangeNotifier {
     duzenliler.sort((a, b) => a.gun.compareTo(b.gun));
   }
 
+  // ---- Eşitleme ----
+
+  /// Eşitlenecek veri: kimlik → JSON. Belgelerin yalnız bilgileri gider, dosyaları bu cihazda kalır.
+  /// Dil ve tema her cihazın kendi ayarıdır; para birimi eşitlenir.
+  Map<String, Map<String, dynamic>> esitlemeVerisi() => {
+        'kayitlar': {for (final k in kayitlar) k.id: k.toJson()},
+        'duzenliler': {for (final d in duzenliler) d.id: d.toJson()},
+        'belgeler': {for (final b in belgeler) b.id: b.toJson()},
+        'butceler': Map<String, dynamic>.of(butceler),
+        'ayar': {'paraBirimi': paraBirimi},
+      };
+
+  /// Birleştirilmiş eşitleme verisini bu cihaza uygular.
+  void esitlemeyiUygula(Map<String, Map<String, dynamic>> m) {
+    Map<String, dynamic> j(Object? v) => Map<String, dynamic>.from(v as Map);
+    final yeniBelgeler = (m['belgeler'] ?? const {}).values.map((e) => Belge.fromJson(j(e))).toList();
+    // Başka cihazda silinen belgelerin bu cihazdaki dosyalarını da sil.
+    final kalanDosyalar = {for (final b in yeniBelgeler) ...b.dosyalar.map((d) => d.id)};
+    for (final b in belgeler) {
+      for (final d in b.dosyalar) {
+        if (!kalanDosyalar.contains(d.id)) Kasa.sil(d.id);
+      }
+    }
+    kayitlar
+      ..clear()
+      ..addAll((m['kayitlar'] ?? const {}).values.map((e) => Kayit.fromJson(j(e))));
+    duzenliler
+      ..clear()
+      ..addAll((m['duzenliler'] ?? const {}).values.map((e) => Duzenli.fromJson(j(e))));
+    belgeler
+      ..clear()
+      ..addAll(yeniBelgeler);
+    butceler
+      ..clear()
+      ..addAll((m['butceler'] ?? const {}).map((k, v) => MapEntry(k, (v as num).toInt())));
+    final pb = m['ayar']?['paraBirimi'];
+    if (pb is String && pb.isNotEmpty) paraBirimi = pb;
+    _degisti();
+  }
+
   // ---- Kayıtlar ----
 
   void kayitKaydet(Kayit k) {

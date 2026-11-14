@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'i18n.dart';
 import 'belge.dart';
 import 'bildirim.dart';
+import 'esitle.dart';
+import 'hesap.dart';
 import 'models.dart';
 import 'pages/ayarlar.dart';
 import 'pages/belgeler.dart';
@@ -31,7 +34,11 @@ Future<void> main() async {
   await Bildirim.baslat();
   Store.i.degisince = Bildirim.yenidenPlanla;
   Bildirim.dokunulunca = bildirimIsle;
+  await Esitleme.i.yukle();
   runApp(const TeraziApp());
+  // Hesap ağdan yüklenir; açılışı bekletmez. Sonra eşitle ve açıkken arada bir yinele.
+  Hesap.i.yukle().then((_) => Esitleme.i.esitle());
+  Timer.periodic(const Duration(minutes: 5), (_) => Esitleme.i.esitle());
 }
 
 class TeraziApp extends StatefulWidget {
@@ -66,6 +73,12 @@ class _TeraziAppState extends State<TeraziApp> with WidgetsBindingObserver {
 
   @override
   void didChangePlatformBrightness() => _degisti();
+
+  /// Uygulamaya dönünce öbür cihazdaki değişiklikleri al.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) Esitleme.i.planla(const Duration(milliseconds: 500));
+  }
 
   @override
   void didChangeLocales(List<Locale>? locales) => _degisti();

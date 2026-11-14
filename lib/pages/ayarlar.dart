@@ -13,6 +13,9 @@ import '../widgets.dart';
 import 'ozet.dart';
 import 'sayfalar.dart';
 import 'yedek.dart';
+import 'hesap_sayfasi.dart';
+import '../esitle.dart';
+import '../hesap.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
 const _oaRozet = 'assets/icon/oalabs_rozet.png';
@@ -101,6 +104,22 @@ class AyarlarSayfasi extends StatelessWidget {
                 children: [
                   Text(L('Ayarlar'), style: oaDisplay(genis ? 30 : 24)),
                   const SizedBox(height: 14),
+                  ListenableBuilder(
+                    listenable: Listenable.merge([Hesap.i, Esitleme.i]),
+                    builder: (context, _) => OACard(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: satir(
+                        Hesap.i.girisli ? Icons.cloud_sync_outlined : Icons.account_circle_outlined,
+                        Hesap.i.girisli
+                            ? (Hesap.i.ad?.isNotEmpty == true ? Hesap.i.ad! : Lx('Hesap ve eşitleme', 'Account and sync'))
+                            : Lx('Giriş yap ve eşitle', 'Sign in and sync'),
+                        hesapOzeti(),
+                        renk: Esitleme.i.hata != null && Esitleme.i.kurulu ? OA.danger : null,
+                        onTap: () => hesapAc(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   OACard(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
@@ -150,7 +169,12 @@ class AyarlarSayfasi extends StatelessWidget {
                   const SizedBox(height: 14),
                   const _UygulamaHakkinda(),
                   const SizedBox(height: 14),
-                  Text(L('Verilerin yalnızca bu cihazda saklanır.'), style: oaBody(14, color: OA.faint)),
+                  Text(
+                      Esitleme.i.acik
+                          ? Lx('Verilerin bu cihazda ve uçtan uca şifreli olarak hesabında saklanır. Belge dosyaları yalnızca bu cihazda.',
+                              'Your data is stored on this device and, end-to-end encrypted, in your account. Document files stay only on this device.')
+                          : L('Verilerin yalnızca bu cihazda saklanır.'),
+                      style: oaBody(14, color: OA.faint)),
                 ],
               ),
             ),

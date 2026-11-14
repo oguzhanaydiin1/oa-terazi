@@ -1,3 +1,10 @@
+## 0.3.0
+
+- İsteğe bağlı giriş: OA Labs hesabınla (oalabs.dev, Center ve Pusula ile aynı hesap) giriş yap ya da uygulamadan üye ol. Şifre yok, e-postana kod gelir.
+- Uçtan uca şifreli eşitleme: kayıtlar, düzenli ödemeler, bütçeler ve belge bilgileri telefonun ile bilgisayarın arasında eşitlenir. Veriler cihazdan senin eşitleme parolanla şifrelenmiş çıkar; sunucuda kimse içini göremez.
+- Belge dosyaları sunucuya hiç gönderilmez; başka cihazda eklenen belgenin bilgisi görünür, dosyası o cihazda kalır.
+- Windows'ta OA Labs Center ya da Pusula'da açık oturum varsa Terazi kendiliğinden giriş yapar.
+
 ## 0.2.3
 
 - "Uygulama hakkında" bölümü İngilizcede de çeviriyle görünüyor

@@ -551,8 +551,20 @@ class _BelgeEkleSayfasiState extends State<BelgeEkleSayfasi> {
 Future<void> belgeAyrinti(BuildContext context, Belge b) =>
     altSayfa<void>(context, (_) => BelgeAyrintiSayfasi(id: b.id));
 
+/// Eşitlemeyle gelen belgenin dosyası bu cihazda yoksa.
+void dosyaBaskaCihazda(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(Lx(
+          'Bu belgenin dosyası başka cihazında. Dosyalar sunucuya gönderilmez; yedek dosyasıyla bu cihaza aktarabilirsin.',
+          'This document’s file is on your other device. Files are never sent to our server; you can move them here with a backup file.'))));
+}
+
 /// Belgenin şifresiz kopyasını sistemin uygulamasıyla açar.
 Future<void> belgeDosyasiniAc(BuildContext context, BelgeDosyasi d) async {
+  if (!await Kasa.varMi(d.id)) {
+    if (context.mounted) dosyaBaskaCihazda(context);
+    return;
+  }
   try {
     final f = await Kasa.geciciKopya(d);
     if (Platform.isWindows) {
@@ -576,6 +588,12 @@ class BelgeAyrintiSayfasi extends StatelessWidget {
   final String id;
 
   Future<void> _paylas(BuildContext context, Belge b) async {
+    for (final d in b.dosyalar) {
+      if (!await Kasa.varMi(d.id)) {
+        if (context.mounted) dosyaBaskaCihazda(context);
+        return;
+      }
+    }
     try {
       final dosyalar = [for (final d in b.dosyalar) XFile((await Kasa.geciciKopya(d)).path)];
       await Share.shareXFiles(dosyalar, subject: b.ad);
@@ -587,6 +605,10 @@ class BelgeAyrintiSayfasi extends StatelessWidget {
   }
 
   Future<void> _farkliKaydet(BuildContext context, BelgeDosyasi d) async {
+    if (!await Kasa.varMi(d.id)) {
+      if (context.mounted) dosyaBaskaCihazda(context);
+      return;
+    }
     try {
       final veri = await Kasa.oku(d.id);
       final yol = await FilePicker.platform.saveFile(fileName: d.ad, bytes: veri);

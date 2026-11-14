@@ -180,6 +180,15 @@ class Kasa {
 
   static Future<Uint8List> oku(String id) async => coz(await (await _dosya(id)).readAsBytes(), await anahtar());
 
+  /// Dosya bu cihazda mı? (Eşitlemeyle gelen belgelerin dosyası başka cihazda kalır.)
+  static Future<bool> varMi(String id) async {
+    try {
+      return await (await _dosya(id)).exists();
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<void> sil(String id) async {
     try {
       final f = await _dosya(id);
