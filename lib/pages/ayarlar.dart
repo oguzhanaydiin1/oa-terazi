@@ -16,9 +16,9 @@ import 'yedek.dart';
 import 'hesap_sayfasi.dart';
 import '../esitle.dart';
 import '../hesap.dart';
+import '../oa_muhur.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
-const _oaRozet = 'assets/icon/oalabs_rozet.png';
 
 /// "Windows 10.0", "Android" gibi kısa sistem bilgisi.
 String _sistemYazi() {
@@ -48,7 +48,12 @@ class _UygulamaHakkinda extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Image.asset(_oaRozet, width: 72, height: 72),
+              OALabsSeal(
+                size: 88,
+                color: OA.text,
+                accent: OA.amber,
+                text: Lx('OA LABS · ATÖLYE · 2026 · OA LABS · ATÖLYE · 2026 · ', 'OA LABS · WORKSHOP · 2026 · OA LABS · WORKSHOP · 2026 · '),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

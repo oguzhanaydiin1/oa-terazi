@@ -1,3 +1,7 @@
+## 0.3.1
+
+- Uygulama hakkında: OA Labs mührü artık OA Radyo'daki gibi dönüyor ve açık temada da temanın renkleriyle görünüyor
+
 ## 0.3.0
 
 - İsteğe bağlı giriş: OA Labs hesabınla (oalabs.dev, Center ve Pusula ile aynı hesap) giriş yap ya da uygulamadan üye ol. Şifre yok, e-postana kod gelir.
