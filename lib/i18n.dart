@@ -199,4 +199,6 @@ const _en = <String, String>{
   'Tutarlar çevrilmez; yalnızca simge ve sayı biçimi değişir.':
       'Amounts aren’t converted; only the symbol and number format change.',
   'Görünüm': 'Appearance',
+  'OA Labs uygulamaları ücretsiz ve reklamsız. Beğendiysen bir kahve ısmarlayarak devam etmemize yardım edebilirsin.': 'OA Labs apps are free and ad-free. If you like them, you can help us keep going by buying us a coffee.',
+  'Bir kahve ısmarla': 'Buy us a coffee',
 };
