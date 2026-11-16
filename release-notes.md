@@ -1,3 +1,7 @@
+## 0.3.2
+
+- Ayarlar → Uygulama hakkında: "Bir kahve ısmarla" düğmesi. Terazi ücretsiz ve reklamsız; isteyen buradan destek olabilir
+
 ## 0.3.1
 
 - Uygulama hakkında: OA Labs mührü artık OA Radyo'daki gibi dönüyor ve açık temada da temanın renkleriyle görünüyor

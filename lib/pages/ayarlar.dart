@@ -74,6 +74,18 @@ class _UygulamaHakkinda extends StatelessWidget {
             _bilgiSatiri(L('Altyapı'), 'Flutter · Dart ${_dartSurumu()}'),
             Divider(height: 1, color: OA.line),
             const SizedBox(height: 12),
+            Wrap(spacing: 14, runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Text(L('OA Labs uygulamaları ücretsiz ve reklamsız. Beğendiysen bir kahve ısmarlayarak devam etmemize yardım edebilirsin.'), style: oaBody(14, color: OA.muted)),
+              ),
+              FilledButton.icon(
+                onPressed: () => launchUrl(Uri.parse('https://buymeacoffee.com/oalabs'), mode: LaunchMode.externalApplication),
+                icon: const Icon(Icons.coffee_outlined, size: 18),
+                label: Text(L('Bir kahve ısmarla')),
+              ),
+            ]),
+            const SizedBox(height: 12),
             Text('© ${DateTime.now().year} Oğuzhan Aydın', style: oaBody(14, color: OA.muted)),
           ],
         ),
